@@ -14,7 +14,7 @@ export default function TemplateGallery() {
           <a
             key={t.id}
             href="#create"
-            className="group relative overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition hover:border-amber-400 hover:shadow-md"
+            className="group relative overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition hover:border-[#c4a35a] hover:shadow-md"
           >
             <div
               className="relative flex h-36 items-center justify-center overflow-hidden border-b border-stone-100 sm:h-40"
@@ -52,12 +52,12 @@ export default function TemplateGallery() {
                 </div>
               )}
               {(t.id === "elegant-profile" || t.id === "abstract-temple") && (
-                <span className="absolute right-1.5 top-1.5 rounded bg-amber-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                <span className="absolute right-1.5 top-1.5 rounded bg-[#c4a35a] px-1.5 py-0.5 text-[9px] font-bold text-white">
                   {t.id === "elegant-profile" ? "New" : "Temple"}
                 </span>
               )}
             </div>
-            <p className="p-2.5 text-center text-xs font-medium text-stone-700 group-hover:text-amber-900">
+            <p className="p-2.5 text-center text-xs font-medium text-stone-700 group-hover:text-[#1a1625]">
               {t.name}
             </p>
           </a>

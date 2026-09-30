@@ -16,6 +16,21 @@ export interface CustomField {
   id: string;
   label: string;
   value: string;
+  include?: boolean;
+}
+
+/** Single form row: editable label, value, include, order */
+export interface FormFieldRow {
+  id: string;
+  key: string; // maps to BiodataFormData key or custom
+  label: string;
+  value: string;
+  include: boolean;
+  type?: "text" | "date" | "select" | "textarea";
+  options?: string[];
+  placeholder?: string;
+  required?: boolean;
+  section: "personal" | "family" | "contact";
 }
 
 export interface BiodataFormData {
@@ -47,6 +62,7 @@ export interface BiodataFormData {
   biodataTitle?: string;
   mantra?: string;
   photoDataUrl?: string;
+  godImage?: string; // emoji or data URL
   customFields: CustomField[];
 }
 

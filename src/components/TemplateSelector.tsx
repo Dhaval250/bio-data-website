@@ -36,7 +36,7 @@ export default function TemplateSelector({ selectedId, onSelect }: Props) {
               className={cn(
                 "group relative flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all",
                 isSelected
-                  ? "border-amber-700 shadow-md ring-1 ring-amber-700/20"
+                  ? "border-[#c4a35a] shadow-md ring-1 ring-[#c4a35a]/20"
                   : "border-stone-200 hover:border-stone-400 hover:shadow-sm"
               )}
             >
@@ -88,7 +88,7 @@ export default function TemplateSelector({ selectedId, onSelect }: Props) {
               </div>
 
               {isSelected && (
-                <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-amber-700 text-[10px] font-bold text-white">
+                <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c4a35a] text-[10px] font-bold text-white">
                   ✓
                 </span>
               )}

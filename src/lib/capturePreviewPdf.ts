@@ -1,6 +1,7 @@
 /**
- * Convert LIVE preview template (with data) → PDF
- * Same DOM = same design. freebiodatamaker-style: image full A4.
+ * Preview → PDF without Tailwind lab() crash.
+ * Strategy: build an iframe with ZERO stylesheets, paste a clone
+ * that only has inline RGB styles from getComputedStyle (resolved).
  */
 
 function loadScript(src: string): Promise<void> {
@@ -28,7 +29,7 @@ async function getHtml2Canvas(): Promise<any> {
     await loadScript("/vendor/html2canvas.min.js");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fn = (window as any).html2canvas;
-    if (!fn) throw new Error("html2canvas unavailable");
+    if (!fn) throw new Error("html2canvas missing");
     return fn;
   }
 }
@@ -43,9 +44,216 @@ async function getJsPDF(): Promise<any> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
     const JsPDF = w.jspdf?.jsPDF || w.jsPDF;
-    if (!JsPDF) throw new Error("jsPDF unavailable");
+    if (!JsPDF) throw new Error("jspdf missing");
     return JsPDF;
   }
+}
+
+function isBad(v: string): boolean {
+  return /lab\(|oklch\(|oklab\(|lch\(|color\(/.test(v);
+}
+
+function toSafeColor(value: string, ctx: CanvasRenderingContext2D): string {
+  if (!value || value === "transparent") return "rgba(0,0,0,0)";
+  if (!isBad(value) && (value.startsWith("#") || value.startsWith("rgb"))) {
+    return value;
+  }
+  try {
+    ctx.fillStyle = "#000";
+    ctx.fillStyle = value;
+    const r = String(ctx.fillStyle);
+    if (r.startsWith("#") || r.startsWith("rgb")) return r;
+  } catch {
+    /* ignore */
+  }
+  // Fallbacks for biodata palette
+  if (value.includes("250") || value.includes("faf")) return "#faf8f5";
+  return "#2c2825";
+}
+
+/** Copy resolved visual styles from live node → target as inline only */
+function inlineComputedTree(
+  source: HTMLElement,
+  target: HTMLElement,
+  ctx: CanvasRenderingContext2D
+) {
+  const cs = window.getComputedStyle(source);
+
+  // Comprehensive visual props (no lab after resolve in modern browsers)
+  const props = [
+    "display",
+    "position",
+    "boxSizing",
+    "width",
+    "height",
+    "maxWidth",
+    "maxHeight",
+    "minWidth",
+    "minHeight",
+    "marginTop",
+    "marginRight",
+    "marginBottom",
+    "marginLeft",
+    "paddingTop",
+    "paddingRight",
+    "paddingBottom",
+    "paddingLeft",
+    "fontFamily",
+    "fontSize",
+    "fontWeight",
+    "fontStyle",
+    "lineHeight",
+    "letterSpacing",
+    "textAlign",
+    "textDecoration",
+    "textTransform",
+    "whiteSpace",
+    "overflow",
+    "overflowX",
+    "overflowY",
+    "verticalAlign",
+    "opacity",
+    "visibility",
+    "borderTopWidth",
+    "borderRightWidth",
+    "borderBottomWidth",
+    "borderLeftWidth",
+    "borderTopStyle",
+    "borderRightStyle",
+    "borderBottomStyle",
+    "borderLeftStyle",
+    "borderTopLeftRadius",
+    "borderTopRightRadius",
+    "borderBottomRightRadius",
+    "borderBottomLeftRadius",
+    "flexDirection",
+    "flexWrap",
+    "justifyContent",
+    "alignItems",
+    "alignContent",
+    "alignSelf",
+    "flex",
+    "flexGrow",
+    "flexShrink",
+    "flexBasis",
+    "gap",
+    "rowGap",
+    "columnGap",
+    "gridTemplateColumns",
+    "gridTemplateRows",
+    "gridColumn",
+    "gridRow",
+    "objectFit",
+    "objectPosition",
+    "zIndex",
+    "top",
+    "right",
+    "bottom",
+    "left",
+    "transform",
+    "transformOrigin",
+  ];
+
+  for (const p of props) {
+    try {
+      const val = cs.getPropertyValue(
+        p.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())
+      );
+      if (val) {
+        target.style.setProperty(
+          p.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase()),
+          val
+        );
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // Colors — force safe
+  const colorProps = [
+    "color",
+    "background-color",
+    "border-top-color",
+    "border-right-color",
+    "border-bottom-color",
+    "border-left-color",
+    "outline-color",
+    "text-decoration-color",
+  ];
+  for (const p of colorProps) {
+    const raw = cs.getPropertyValue(p);
+    target.style.setProperty(p, toSafeColor(raw || "#2c2825", ctx), "important");
+  }
+
+  // background-image often none; skip gradients with lab
+  const bgImage = cs.backgroundImage;
+  if (!bgImage || bgImage === "none" || isBad(bgImage)) {
+    target.style.setProperty("background-image", "none", "important");
+  }
+
+  target.style.setProperty("box-shadow", "none", "important");
+  target.style.setProperty("text-shadow", "none", "important");
+  target.style.setProperty("filter", "none", "important");
+
+  // Children
+  const srcChildren = Array.from(source.children);
+  const dstChildren = Array.from(target.children);
+  for (let i = 0; i < srcChildren.length; i++) {
+    const s = srcChildren[i];
+    const d = dstChildren[i];
+    if (s instanceof HTMLElement && d instanceof HTMLElement) {
+      inlineComputedTree(s, d, ctx);
+    }
+  }
+}
+
+function buildSafeClone(element: HTMLElement): {
+  host: HTMLIFrameElement;
+  clone: HTMLElement;
+  width: number;
+  height: number;
+} {
+  const rect = element.getBoundingClientRect();
+  const width = Math.max(1, Math.ceil(element.scrollWidth || rect.width));
+  const height = Math.max(1, Math.ceil(element.scrollHeight || rect.height));
+
+  const iframe = document.createElement("iframe");
+  iframe.style.cssText = `position:fixed;left:-10000px;top:0;width:${width}px;height:${height}px;border:0;opacity:0;pointer-events:none;`;
+  document.body.appendChild(iframe);
+
+  const idoc = iframe.contentDocument!;
+  idoc.open();
+  idoc.write(
+    `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#faf8f5;"></body></html>`
+  );
+  idoc.close();
+
+  const clone = element.cloneNode(true) as HTMLElement;
+
+  // Sync images
+  const srcImgs = element.querySelectorAll("img");
+  const dstImgs = clone.querySelectorAll("img");
+  srcImgs.forEach((src, i) => {
+    if (dstImgs[i] && src.src) {
+      dstImgs[i].src = src.src;
+      dstImgs[i].style.objectFit = "cover";
+    }
+  });
+
+  const ctx = document.createElement("canvas").getContext("2d")!;
+  inlineComputedTree(element, clone, ctx);
+
+  clone.style.width = `${width}px`;
+  clone.style.height = `${height}px`;
+  clone.style.margin = "0";
+  clone.style.maxWidth = "none";
+  clone.style.boxShadow = "none";
+  clone.style.backgroundColor = "#faf8f5";
+
+  idoc.body.appendChild(clone);
+
+  return { host: iframe, clone, width, height };
 }
 
 export async function captureElementToPdf(
@@ -55,28 +263,55 @@ export async function captureElementToPdf(
   const html2canvas = await getHtml2Canvas();
   const JsPDF = await getJsPDF();
 
-  // Use the REAL on-screen template (same data + same design)
-  const canvas = await html2canvas(element, {
-    scale: 3,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: "#faf8f5",
-    logging: false,
-    scrollX: 0,
-    scrollY: 0,
-  });
+  await document.fonts?.ready?.catch?.(() => undefined);
 
-  const imgData = canvas.toDataURL("image/jpeg", 0.95);
-  const pdf = new JsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-    compress: true,
-  });
+  const imgs = Array.from(element.querySelectorAll("img"));
+  await Promise.all(
+    imgs.map((img) =>
+      img.complete && img.naturalHeight > 0
+        ? Promise.resolve()
+        : new Promise<void>((res) => {
+            img.onload = () => res();
+            img.onerror = () => res();
+          })
+    )
+  );
 
-  // Full A4 page — same as freebiodatamaker.com
-  pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
+  const { host, clone, width, height } = buildSafeClone(element);
 
-  const name = fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`;
-  pdf.save(name);
+  try {
+    // Wait layout in iframe
+    await new Promise((r) => setTimeout(r, 50));
+
+    const canvas = await html2canvas(clone, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#faf8f5",
+      logging: false,
+      width,
+      height,
+      windowWidth: width,
+      windowHeight: height,
+      scrollX: 0,
+      scrollY: 0,
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.97);
+    const pdf = new JsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+      compress: true,
+    });
+
+    pdf.setFillColor(250, 248, 245);
+    pdf.rect(0, 0, 210, 297, "F");
+    pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
+
+    const name = fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`;
+    pdf.save(name);
+  } finally {
+    host.remove();
+  }
 }

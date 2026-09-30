@@ -95,7 +95,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
               </h1>
               <div className="mt-2 flex items-center gap-2">
                 <span className="text-xl leading-none" aria-hidden>
-                  🕉️
+                  {data.godImage || "🕉️"}
                 </span>
                 <p className="text-[12px] font-medium tracking-wide text-[#6b645c]">
                   {data.mantra?.trim() || "|| Shri Ganeshaya Namah ||"}

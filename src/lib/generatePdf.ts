@@ -168,19 +168,20 @@ function drawFieldRows(
   lineH: number
 ): number {
   let cy = y;
-  const labelW = colW * 0.45;
-  const valueX = x + labelW + 8;
-  const valueW = colW - labelW - 12;
+  // Fixed label column so ":" lines up across all rows
+  const labelW = Math.min(150, colW * 0.48);
+  const valueX = x + labelW + 10;
+  const valueW = colW - labelW - 14;
   for (const [label, value] of rows) {
     ctx.font = "12px Georgia, serif";
     ctx.fillStyle = "#5c564e";
     ctx.fillText(label, x, cy);
     ctx.fillStyle = "#9a9288";
-    ctx.fillText(":", x + labelW - 4, cy);
+    ctx.fillText(":", x + labelW, cy);
     ctx.font = "600 12px Georgia, serif";
     ctx.fillStyle = "#2c2825";
-    const nextY = drawWrap(ctx, value, valueX, cy, valueW, lineH * 0.9);
-    cy = Math.max(cy + lineH, nextY + 2);
+    const nextY = drawWrap(ctx, value, valueX, cy, valueW, lineH * 0.85);
+    cy = Math.max(cy + lineH, nextY + 4);
   }
   return cy;
 }
@@ -344,72 +345,64 @@ export async function generateBiodataPdf(data: PdfBiodataInput): Promise<void> {
     ["Email ID", data.email],
   ]);
 
-  const totalLines =
-    leftPersonal.length +
-    leftEdu.length +
-    leftOcc.length +
-    leftAddr.length +
-    rightFam.length +
-    rightExp.length +
-    rightCustom.length +
-    rightContact.length +
-    8;
+  // ——— Two-column aligned layout (tight, even spacing) ———
+  type Block = Row[];
+  const leftBlocks: { icon: string; title: string; rows: Block }[] = [
+    { icon: "👤", title: "PERSONAL DETAILS", rows: leftPersonal },
+    { icon: "🎓", title: "EDUCATION", rows: leftEdu },
+    { icon: "💼", title: "OCCUPATION", rows: leftOcc },
+    { icon: "🏠", title: "ADDRESS", rows: leftAddr },
+  ].filter((b) => b.rows.length > 0);
 
-  const footerY = BH - 40;
-  const availH = footerY - y - 16;
-  // Spread content to fill page height
-  const lineH = Math.min(26, Math.max(15, availH / Math.max(totalLines, 10)));
+  const rightBlocks: { icon: string; title: string; rows: Block }[] = [
+    { icon: "👨‍👩‍👧", title: "FAMILY DETAILS", rows: rightFam },
+    { icon: "♥", title: "EXPECTATIONS", rows: rightExp },
+    ...(rightCustom.length
+      ? [{ icon: "★", title: "HOBBIES & INTERESTS", rows: rightCustom }]
+      : []),
+    { icon: "💬", title: "CONTACT DETAILS", rows: rightContact },
+  ].filter((b) => b.rows.length > 0);
 
-  const colGap = 32;
+  // Fixed, professional spacing — no huge empty gaps
+  const lineH = 22;
+  const sectionGap = 18;
+  const colGap = 28;
   const colW = (BW - M * 2 - colGap) / 2;
   const leftX = M;
   const rightX = M + colW + colGap;
+  const contentTop = y;
 
-  // Left column
-  let ly = y;
-  ly = drawSectionTitle(ctx, leftX, ly, "👤", "PERSONAL DETAILS");
-  ly = drawFieldRows(ctx, leftPersonal, leftX, ly, colW, lineH);
-  ly += 12;
-  ly = drawSectionTitle(ctx, leftX, ly, "🎓", "EDUCATION");
-  ly = drawFieldRows(ctx, leftEdu, leftX, ly, colW, lineH);
-  ly += 12;
-  ly = drawSectionTitle(ctx, leftX, ly, "💼", "OCCUPATION");
-  ly = drawFieldRows(ctx, leftOcc, leftX, ly, colW, lineH);
-  ly += 12;
-  ly = drawSectionTitle(ctx, leftX, ly, "🏠", "ADDRESS");
-  ly = drawFieldRows(ctx, leftAddr, leftX, ly, colW, lineH);
+  const drawColumn = (
+    blocks: { icon: string; title: string; rows: Block }[],
+    x: number,
+    startY: number
+  ) => {
+    let cy = startY;
+    blocks.forEach((b, i) => {
+      cy = drawSectionTitle(ctx, x, cy, b.icon, b.title);
+      cy = drawFieldRows(ctx, b.rows, x, cy, colW, lineH);
+      if (i < blocks.length - 1) cy += sectionGap;
+    });
+    return cy;
+  };
 
-  // Right column
-  let ry = y;
-  ry = drawSectionTitle(ctx, rightX, ry, "👨‍👩‍👧", "FAMILY DETAILS");
-  ry = drawFieldRows(ctx, rightFam, rightX, ry, colW, lineH);
-  ry += 12;
-  ry = drawSectionTitle(ctx, rightX, ry, "♥", "EXPECTATIONS");
-  ry = drawFieldRows(ctx, rightExp, rightX, ry, colW, lineH);
-  if (rightCustom.length) {
-    ry += 12;
-    ry = drawSectionTitle(ctx, rightX, ry, "★", "HOBBIES & INTERESTS");
-    ry = drawFieldRows(ctx, rightCustom, rightX, ry, colW, lineH);
-  }
-  ry += 12;
-  ry = drawSectionTitle(ctx, rightX, ry, "💬", "CONTACT DETAILS");
-  ry = drawFieldRows(ctx, rightContact, rightX, ry, colW, lineH);
+  const ly = drawColumn(leftBlocks, leftX, contentTop);
+  const ry = drawColumn(rightBlocks, rightX, contentTop);
+  const contentBottom = Math.max(ly, ry);
 
-  // Footer under content (same as preview) + corner leaves
-  const contentBottom = Math.max(ly, ry) + 28;
-  const footerTextY = Math.min(contentBottom, footerY);
-
-  ctx.font = "italic 11px Georgia, serif";
+  // Footer just below content (small gap), not floating mid-page
+  const footerY = Math.min(BH - 36, Math.max(contentBottom + 28, BH - 56));
+  ctx.font = "italic 12px Georgia, serif";
   ctx.fillStyle = "#8a8278";
   ctx.textAlign = "center";
   ctx.fillText(
     "Looking forward to a meaningful journey together...",
     BW / 2,
-    footerTextY
+    footerY
   );
   ctx.textAlign = "left";
 
-  // Corner leaves (same as screen preview)
+  // Corner leaves
   drawLeaf(ctx, 28, 22, 55, -15);
   drawLeaf(ctx, BW - 70, BH - 90, 55, 165);
 
