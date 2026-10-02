@@ -452,7 +452,7 @@ export default function BiodataForm() {
       const k = row.key as keyof BiodataFormData;
       if (k === "gender") {
         update("gender", (row.value === "male" || row.value === "female" ? row.value : "") as BiodataFormData["gender"]);
-      } else if (typeof (initialData as Record<string, unknown>)[k] === "string") {
+      } else if (typeof (initialData as unknown as Record<string, unknown>)[k] === "string") {
         update(k, row.value as never);
       }
     }
@@ -519,7 +519,7 @@ export default function BiodataForm() {
         !["maritalStatus", "gana", "diet", "disability", "complexion", "blood", "salary", "nativePlaceExtra", "hobbies", "expectations"].includes(f.key);
 
       if (f.key === "rashi" || f.key === "nakshatra" || f.key === "gotra") {
-        (next as Record<string, unknown>)[f.key] = f.value;
+        (next as unknown as Record<string, unknown>)[f.key] = f.value;
       } else if (f.key === "manglik") {
         next.manglik = (f.value as BiodataFormData["manglik"]) || "";
       } else if (known) {
@@ -527,7 +527,7 @@ export default function BiodataForm() {
         if (k === "gender") {
           next.gender = f.value === "male" || f.value === "female" ? f.value : "";
         } else if (typeof next[k] === "string" || next[k] === undefined) {
-          (next as Record<string, unknown>)[k] = f.value;
+          (next as unknown as Record<string, unknown>)[k] = f.value;
         }
       } else if (f.label.trim() && f.value.trim()) {
         customs.push({ id: f.id, label: f.label, value: f.value, include: true });
@@ -838,7 +838,7 @@ export default function BiodataForm() {
             {step === 2 && (
               <div className="mt-6">
                 <TemplateSelector
-                  selected={data.templateId}
+                  selectedId={data.templateId}
                   onSelect={(id) => update("templateId", id)}
                 />
               </div>
