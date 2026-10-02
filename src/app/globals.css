@@ -15,7 +15,7 @@ body {
   min-width: 0;
   overflow-x: hidden;
   background: #faf8f5;
-  color: #1a1625;
+  color: #1c1917;
 }
 
 :focus-visible {
@@ -24,7 +24,7 @@ body {
 }
 
 .hero-gradient {
-  background: linear-gradient(145deg, #1a1625 0%, #2a2438 45%, #3d3550 100%);
+  background: linear-gradient(145deg, #0c0a09 0%, #1c1917 40%, #292524 100%);
 }
 
 .form-section-bg {
@@ -33,12 +33,12 @@ body {
 
 .lang-pill {
   border-radius: 0.5rem;
-  border: 1px solid #e5dfd4;
+  border: 1px solid #e7e5e4;
   background: white;
   padding: 0.4rem 0.85rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #6b645c;
+  color: #78716c;
   transition: all 0.15s ease;
   cursor: pointer;
 }
@@ -47,8 +47,8 @@ body {
   background: #faf8f5;
 }
 .lang-pill.active {
-  border-color: #1a1625;
-  background: #1a1625;
+  border-color: #1c1917;
+  background: #1c1917;
   color: #e8d5a3;
 }
 
@@ -61,7 +61,7 @@ body {
   padding: 0.3rem 0.8rem;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #8a7340;
+  color: #9a7b3c;
   transition: all 0.15s ease;
   cursor: pointer;
 }
@@ -71,8 +71,8 @@ body {
 
 .card-elevated {
   box-shadow:
-    0 1px 2px rgb(26 22 37 / 0.04),
-    0 12px 40px rgb(26 22 37 / 0.08);
+    0 1px 2px rgb(12 10 9 / 0.04),
+    0 12px 40px rgb(12 10 9 / 0.08);
 }
 
 @media (prefers-reduced-motion: reduce) {

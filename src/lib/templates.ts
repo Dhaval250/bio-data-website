@@ -1,6 +1,52 @@
 import { Template } from "./types";
 
+/** Only templates that have real preview images in /public/templates */
 export const TEMPLATES: Template[] = [
+  {
+    id: "abstract-orange",
+    name: "Abstract Orange",
+    description: "Floral cream frame, orange headers, photo right",
+    accent: "#e67e22",
+    headerBg: "#fffaf5",
+    borderColor: "#f0c078",
+    previewClass: "bg-[#fffaf5] border-[#f0c078]",
+  },
+  {
+    id: "abstract-lotus",
+    name: "Abstract Lotus",
+    description: "Soft pink lotus corners, burgundy titles, cream page",
+    accent: "#9b2c2c",
+    headerBg: "#fff5f5",
+    borderColor: "#f8b4b4",
+    previewClass: "bg-[#fff5f5] border-[#f8b4b4]",
+  },
+  {
+    id: "abstract-red-velvet",
+    name: "Abstract Red Velvet",
+    description: "Deep red velvet frame, white center, traditional look",
+    accent: "#9b1c1c",
+    headerBg: "#ffffff",
+    borderColor: "#7f1d1d",
+    previewClass: "bg-white border-red-800",
+  },
+  {
+    id: "abstract-rose",
+    name: "Abstract Rose",
+    description: "Rich magenta rose with gold ornaments",
+    accent: "#f5d76e",
+    headerBg: "#6b0f3a",
+    borderColor: "#f5d76e",
+    previewClass: "bg-[#6b0f3a] border-[#f5d76e]",
+  },
+  {
+    id: "abstract-blue",
+    name: "Abstract Blue",
+    description: "Navy blue premium with gold accents",
+    accent: "#f5d76e",
+    headerBg: "#0a1628",
+    borderColor: "#c9a227",
+    previewClass: "bg-[#0a1628] border-[#c9a227]",
+  },
   {
     id: "elegant-profile",
     name: "Elegant Profile",
@@ -10,94 +56,87 @@ export const TEMPLATES: Template[] = [
     borderColor: "#d6cfc4",
     previewClass: "bg-[#faf8f5] border-[#d6cfc4]",
   },
-  {
-    id: "abstract-temple",
-    name: "Abstract Temple",
-    description: "Traditional cream card with temple borders & photo",
-    accent: "#8B4513",
-    headerBg: "#F5E6C8",
-    borderColor: "#C4A35A",
-    previewClass: "bg-[#F5E6C8] border-[#C4A35A]",
-  },
-  {
-    id: "classic-ivory",
-    name: "Classic Ivory",
-    description: "Clean ivory background with gold accents",
-    accent: "#b8860b",
-    headerBg: "#faf8f5",
-    borderColor: "#d4af37",
-    previewClass: "bg-amber-50 border-amber-300",
-  },
-  {
-    id: "royal-maroon",
-    name: "Royal Maroon",
-    description: "Traditional maroon with elegant borders",
-    accent: "#7f1d1d",
-    headerBg: "#fef2f2",
-    borderColor: "#991b1b",
-    previewClass: "bg-red-50 border-red-700",
-  },
-  {
-    id: "temple-saffron",
-    name: "Temple Saffron",
-    description: "Warm saffron traditional style",
-    accent: "#c2410c",
-    headerBg: "#fff7ed",
-    borderColor: "#ea580c",
-    previewClass: "bg-orange-50 border-orange-600",
-  },
-  {
-    id: "heritage-gold",
-    name: "Heritage Gold",
-    description: "Rich gold borders with cream paper feel",
-    accent: "#a16207",
-    headerBg: "#fefce8",
-    borderColor: "#ca8a04",
-    previewClass: "bg-yellow-50 border-yellow-600",
-  },
-  {
-    id: "modern-slate",
-    name: "Modern Slate",
-    description: "Minimal slate and white professional look",
-    accent: "#334155",
-    headerBg: "#f8fafc",
-    borderColor: "#64748b",
-    previewClass: "bg-slate-50 border-slate-400",
-  },
-  {
-    id: "sapphire-blue",
-    name: "Sapphire Blue",
-    description: "Deep blue professional template",
-    accent: "#1e40af",
-    headerBg: "#eff6ff",
-    borderColor: "#2563eb",
-    previewClass: "bg-blue-50 border-blue-600",
-  },
-  {
-    id: "lotus-pink",
-    name: "Lotus Pink",
-    description: "Soft pink with lotus-inspired elegance",
-    accent: "#be185d",
-    headerBg: "#fdf2f8",
-    borderColor: "#db2777",
-    previewClass: "bg-pink-50 border-pink-600",
-  },
-  {
-    id: "pearl-white",
-    name: "Pearl White",
-    description: "Ultra-minimal pure white & charcoal",
-    accent: "#18181b",
-    headerBg: "#ffffff",
-    borderColor: "#a1a1aa",
-    previewClass: "bg-white border-zinc-400",
-  },
 ];
 
-/** Preview image path — put files in /public/templates/{id}.png */
 export function templateImageSrc(id: string): string {
+  const webpIds = [
+    "abstract-orange",
+    "abstract-lotus",
+    "abstract-red-velvet",
+    "abstract-rose",
+    "abstract-blue",
+  ];
+  if (webpIds.includes(id)) return `/templates/${id}.webp`;
   return `/templates/${id}.png`;
 }
 
 export function getTemplate(id: string): Template {
   return TEMPLATES.find((t) => t.id === id) || TEMPLATES[0];
+}
+
+export type ClassicTheme = {
+  pageBg: string;
+  panelBg: string;
+  titleColor: string;
+  sectionColor: string;
+  textColor: string;
+  labelColor: string;
+  photoBorder: string;
+  frame?: string;
+  dark?: boolean;
+};
+
+export function getClassicTheme(id: string): ClassicTheme | null {
+  const themes: Record<string, ClassicTheme> = {
+    "abstract-orange": {
+      pageBg: "linear-gradient(180deg,#fff9f3,#fffefb)",
+      panelBg: "transparent",
+      titleColor: "#e67e22",
+      sectionColor: "#e67e22",
+      textColor: "#3d3429",
+      labelColor: "#5c5348",
+      photoBorder: "#e8b86d",
+      frame: "#e8b86d",
+    },
+    "abstract-lotus": {
+      pageBg: "linear-gradient(180deg,#fff8f5,#ffffff)",
+      panelBg: "transparent",
+      titleColor: "#9b1c1c",
+      sectionColor: "#9b1c1c",
+      textColor: "#3f3a34",
+      labelColor: "#5c5348",
+      photoBorder: "#e8a0a0",
+    },
+    "abstract-red-velvet": {
+      pageBg: "linear-gradient(180deg,#5c0a0a,#7f1d1d 30%,#5c0a0a)",
+      panelBg: "#ffffff",
+      titleColor: "#7f1d1d",
+      sectionColor: "#9b1c1c",
+      textColor: "#3f3a34",
+      labelColor: "#5c5348",
+      photoBorder: "#c4a35a",
+      frame: "#7f1d1d",
+    },
+    "abstract-rose": {
+      pageBg: "linear-gradient(160deg,#4a0a2a,#6b0f3a 40%,#3d0620)",
+      panelBg: "transparent",
+      titleColor: "#f5d76e",
+      sectionColor: "#f5d76e",
+      textColor: "#faf5f0",
+      labelColor: "#f0e6d8",
+      photoBorder: "#f5d76e",
+      dark: true,
+    },
+    "abstract-blue": {
+      pageBg: "linear-gradient(160deg,#061018,#0a1628 40%,#050d18)",
+      panelBg: "transparent",
+      titleColor: "#f5d76e",
+      sectionColor: "#f5d76e",
+      textColor: "#f1f5f9",
+      labelColor: "#cbd5e1",
+      photoBorder: "#c9a227",
+      dark: true,
+    },
+  };
+  return themes[id] || null;
 }

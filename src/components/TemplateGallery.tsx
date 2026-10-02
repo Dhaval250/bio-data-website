@@ -51,13 +51,18 @@ export default function TemplateGallery() {
                   />
                 </div>
               )}
-              {(t.id === "elegant-profile" || t.id === "abstract-temple") && (
+              {t.id === "elegant-profile" && (
                 <span className="absolute right-1.5 top-1.5 rounded bg-[#c4a35a] px-1.5 py-0.5 text-[9px] font-bold text-white">
-                  {t.id === "elegant-profile" ? "New" : "Temple"}
+                  Classic
+                </span>
+              )}
+              {t.id.startsWith("abstract-") && (
+                <span className="absolute right-1.5 top-1.5 rounded bg-[#1c1917] px-1.5 py-0.5 text-[9px] font-bold text-[#e8d5a3]">
+                  Premium
                 </span>
               )}
             </div>
-            <p className="p-2.5 text-center text-xs font-medium text-stone-700 group-hover:text-[#1a1625]">
+            <p className="p-2.5 text-center text-xs font-medium text-stone-700 group-hover:text-[#1c1917]">
               {t.name}
             </p>
           </a>

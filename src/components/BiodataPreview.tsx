@@ -2,7 +2,7 @@
 
 import { forwardRef } from "react";
 import { BiodataFormData } from "@/lib/types";
-import { getTemplate } from "@/lib/templates";
+import { getTemplate, getClassicTheme } from "@/lib/templates";
 
 interface Props {
   data: BiodataFormData;
@@ -52,6 +52,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
   ref
 ) {
   const template = getTemplate(data.templateId);
+  const classicTheme = getClassicTheme(template.id);
   const isElegant =
     template.id === "elegant-profile" || template.id === "pearl-white";
   const isTemple =
@@ -64,6 +65,163 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
     (f) => f.label?.trim() && f.value?.trim()
   );
 
+  // ——— CLASSIC ABSTRACT TEMPLATES (orange / lotus / red velvet / rose / blue) ———
+  if (classicTheme) {
+    const th = classicTheme;
+    const line = (label: string, value?: string) => {
+      if (!value || !String(value).trim()) return null;
+      return (
+        <div
+          key={label}
+          className="grid grid-cols-[130px_10px_1fr] gap-x-1 text-[11.5px] leading-[1.75] sm:grid-cols-[148px_12px_1fr] sm:text-[12.5px]"
+          style={{ color: th.textColor }}
+        >
+          <span style={{ color: th.labelColor }}>{label}</span>
+          <span style={{ opacity: 0.45 }}>:</span>
+          <span className="font-medium">{value}</span>
+        </div>
+      );
+    };
+
+    const isFramed = template.id === "abstract-red-velvet";
+    const showFloral = template.id === "abstract-orange" || template.id === "abstract-lotus";
+
+    return (
+      <div
+        ref={ref}
+        data-biodata-preview
+        id="biodata-preview-card"
+        className="relative mx-auto w-full max-w-[440px] overflow-hidden rounded-sm shadow-xl sm:max-w-[520px]"
+        style={{
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          aspectRatio: "210 / 297",
+          minHeight: "640px",
+          background: th.pageBg,
+        }}
+      >
+        {showFloral && (
+          <>
+            <div className="pointer-events-none absolute -left-6 -top-4 h-36 w-36 opacity-70" aria-hidden
+              style={{ background: "radial-gradient(circle at 30% 40%, #f9c4c0 0%, transparent 55%), radial-gradient(circle at 70% 30%, #f5d0c8 0%, transparent 50%)" }} />
+            <div className="pointer-events-none absolute -right-4 -top-2 h-28 w-28 opacity-55" aria-hidden
+              style={{ background: "radial-gradient(circle at 60% 40%, #f9c4c0 0%, transparent 55%)" }} />
+            <div className="pointer-events-none absolute -bottom-4 -left-4 h-32 w-40 opacity-60" aria-hidden
+              style={{ background: "radial-gradient(circle at 40% 50%, #f5d0c8 0%, transparent 55%)" }} />
+            <div className="pointer-events-none absolute -bottom-2 -right-6 h-36 w-36 opacity-65" aria-hidden
+              style={{ background: "radial-gradient(circle at 50% 40%, #f9c4c0 0%, transparent 50%)" }} />
+          </>
+        )}
+
+        {/* ornamental corners for dark themes */}
+        {(template.id === "abstract-rose" || template.id === "abstract-blue") && (
+          <>
+            <div className="pointer-events-none absolute left-2 top-2 text-2xl opacity-40" style={{ color: th.titleColor }} aria-hidden>❧</div>
+            <div className="pointer-events-none absolute right-2 top-2 text-2xl opacity-40" style={{ color: th.titleColor }} aria-hidden>❧</div>
+            <div className="pointer-events-none absolute bottom-2 left-2 text-2xl opacity-40" style={{ color: th.titleColor }} aria-hidden>❧</div>
+            <div className="pointer-events-none absolute bottom-2 right-2 text-2xl opacity-40" style={{ color: th.titleColor }} aria-hidden>❧</div>
+          </>
+        )}
+
+        <div
+          id="biodata-print-inner"
+          className={
+            isFramed
+              ? "relative z-[1] m-3 flex min-h-[600px] flex-col rounded-xl bg-white p-4 shadow-inner sm:m-5 sm:p-6"
+              : "relative z-[1] m-3 flex min-h-[600px] flex-col p-4 sm:m-4 sm:p-6"
+          }
+          style={
+            !isFramed && th.frame
+              ? { border: `1.5px solid ${th.frame}`, boxShadow: `inset 0 0 0 1px ${th.frame}55` }
+              : isFramed
+                ? { boxShadow: "0 0 0 10px #7f1d1d, 0 0 0 12px #c4a35a33" }
+                : undefined
+          }
+        >
+          {/* Header */}
+          <div className="mb-4 flex shrink-0 flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <h1 className="text-lg font-bold tracking-wide sm:text-xl" style={{ color: th.titleColor }}>
+              {data.biodataTitle?.trim() || "Marriage Biodata"}
+            </h1>
+            <span
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl shadow-sm sm:h-11 sm:w-11"
+              style={{
+                border: `2px solid ${th.photoBorder}`,
+                background: th.dark ? "rgba(255,255,255,0.08)" : "linear-gradient(#fff8e7,#f5e6c8)",
+              }}
+              aria-hidden
+            >
+              {data.godImage || "🕉️"}
+            </span>
+            <p className="text-sm font-semibold tracking-wide sm:text-base" style={{ color: th.titleColor }}>
+              {data.mantra?.trim() || "|| Shri Ganeshaya Namah ||"}
+            </p>
+          </div>
+
+          <div className="flex min-h-0 flex-1 gap-3 sm:gap-5">
+            <div className="min-w-0 flex-1">
+              <h2 className="mb-2 text-base font-bold sm:text-lg" style={{ color: th.sectionColor }}>
+                Personal Details
+              </h2>
+              <div className="space-y-0">
+                {line("Full Name", data.fullName)}
+                {line("Date of Birth", data.dob)}
+                {line("Height", data.height)}
+                {line("Place of Birth", data.nativePlace)}
+                {line("Religion", data.religion)}
+                {line("Caste", data.caste)}
+                {line("Zodiac Sign", data.rashi)}
+                {line("Nakshatra", data.nakshatra)}
+                {line("Manglik", data.manglik)}
+                {line("Gotra", data.gotra)}
+                {line("Higher Education", data.education)}
+                {line("Occupation", data.occupation)}
+                {customRows.slice(0, 4).map((f) => line(f.label, f.value))}
+              </div>
+
+              <h2 className="mb-2 mt-4 text-base font-bold sm:text-lg" style={{ color: th.sectionColor }}>
+                Family Details
+              </h2>
+              <div className="space-y-0">
+                {line("Father's Name", data.fatherName)}
+                {line("Father's Occupation", data.fatherOccupation)}
+                {line("Mother's Name", data.motherName)}
+                {line("Mother's Occupation", data.motherOccupation)}
+                {line("Brothers / Sisters", data.siblings)}
+                {line("Family Background", data.familyDetails)}
+              </div>
+
+              <h2 className="mb-2 mt-4 text-base font-bold sm:text-lg" style={{ color: th.sectionColor }}>
+                Contact Details
+              </h2>
+              <div className="space-y-0">
+                {line("Mobile Number", data.phone)}
+                {line("Email", data.email)}
+                {line("Address", data.address)}
+              </div>
+            </div>
+
+            <div className="mt-1 shrink-0">
+              <div
+                className="h-[120px] w-[95px] overflow-hidden rounded shadow-md sm:h-[140px] sm:w-[110px]"
+                style={{ border: `2.5px solid ${th.photoBorder}`, background: th.dark ? "rgba(0,0,0,0.25)" : "#f5ebe0" }}
+              >
+                {data.photoDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={data.photoDataUrl} alt={data.fullName || "Photo"} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center opacity-50">
+                    <span className="text-3xl">👤</span>
+                    <span className="mt-1 text-[8px] tracking-wider">PHOTO</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ——— ELEGANT PROFILE (A4 full-page, no empty space) ———
   if (isElegant) {
     return (
@@ -71,7 +229,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
         ref={ref}
         data-biodata-preview
         id="biodata-preview-card"
-        className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-sm border border-[#e5dfd4] bg-[#faf8f5] shadow-lg sm:max-w-[480px]"
+        className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-sm border border-[#e7e5e4] bg-[#faf8f5] shadow-lg sm:max-w-[480px]"
         style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
           aspectRatio: "210 / 297",
@@ -97,7 +255,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
                 <span className="text-xl leading-none" aria-hidden>
                   {data.godImage || "🕉️"}
                 </span>
-                <p className="text-[12px] font-medium tracking-wide text-[#6b645c]">
+                <p className="text-[12px] font-medium tracking-wide text-[#78716c]">
                   {data.mantra?.trim() || "|| Shri Ganeshaya Namah ||"}
                 </p>
               </div>
