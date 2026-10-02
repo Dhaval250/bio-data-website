@@ -24,7 +24,7 @@ export default function TemplateSelector({ selectedId, onSelect }: Props) {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
         {TEMPLATES.map((t) => {
           const isSelected = selectedId === t.id;
           const showImg = !broken[t.id];

@@ -2,7 +2,7 @@ import Header from "@/components/Header";
 import BiodataForm from "@/components/BiodataForm";
 import TemplateGallery from "@/components/TemplateGallery";
 
-const shell = "mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10";
+const shell = "mx-auto w-full max-w-[1400px] px-3 sm:px-6 lg:px-10";
 
 const HOW_STEPS = [
   {

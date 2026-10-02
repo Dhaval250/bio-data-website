@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-stone-200/80 bg-[#faf8f5]/95 backdrop-blur-md">
-      <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto flex h-12 w-full max-w-[1400px] items-center justify-between gap-2 px-3 sm:h-14 sm:px-6 lg:px-10">
         <Link
           href="/"
           className="flex items-center gap-2.5 font-semibold tracking-tight text-[#1c1917]"
@@ -14,7 +14,7 @@ export default function Header() {
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-[#c4a35a] to-[#9a7b3c] text-[10px] font-bold text-white shadow-sm">
             BD
           </span>
-          <span className="text-[15px]">
+          <span className="truncate text-sm sm:text-[15px]">
             Free<span className="text-[#c4a35a]">Biodata</span>Maker
           </span>
         </Link>
@@ -36,7 +36,7 @@ export default function Header() {
 
         <a
           href="#create"
-          className="rounded-full bg-[#1c1917] px-4 py-1.5 text-sm font-semibold text-[#e8d5a3] shadow-sm transition hover:bg-[#0c0a09]"
+          className="shrink-0 rounded-full bg-[#1c1917] px-3 py-1.5 text-xs font-semibold text-[#e8d5a3] shadow-sm transition hover:bg-[#0c0a09] sm:px-4 sm:text-sm"
         >
           Create
         </a>

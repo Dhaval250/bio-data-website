@@ -51,7 +51,7 @@ const OPTIONAL_CHIPS = [
 ] as const;
 
 const fieldClass =
-  "w-full rounded-xl border border-[#e7e5e4] bg-white px-3.5 py-2.5 text-sm text-[#1c1917] shadow-sm outline-none transition placeholder:text-[#78716c]/60 focus:border-[#c4a35a] focus:ring-2 focus:ring-[#c4a35a]/25";
+  "w-full min-h-[44px] rounded-xl border border-[#e7e5e4] bg-white px-3.5 py-2.5 text-base text-[#1c1917] shadow-sm outline-none transition placeholder:text-[#78716c]/60 focus:border-[#c4a35a] focus:ring-2 focus:ring-[#c4a35a]/25 sm:text-sm touch-manipulation";
 
 function makeId() {
   return `f-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -191,14 +191,18 @@ function FieldRow({
     }
   };
 
+  const btnMove =
+    "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#c4a35a] text-white shadow-sm transition hover:bg-[#9a7b3c] disabled:opacity-30 touch-manipulation sm:h-8 sm:w-8";
+
   return (
-    <div className="rounded-xl border border-[#e7e5e4]/80 bg-white/90 p-3 shadow-sm">
-      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+    <div className="rounded-xl border border-[#e7e5e4] bg-white p-3 shadow-sm sm:p-3.5">
+      {/* Label + Include */}
+      <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           {editingLabel ? (
             <input
               autoFocus
-              className="min-w-0 flex-1 rounded-lg border border-[#c4a35a] bg-white px-2 py-1 text-sm font-semibold text-stone-800 outline-none focus:ring-2 focus:ring-[#e7e5e4]"
+              className="min-w-0 flex-1 rounded-lg border border-[#c4a35a] bg-white px-2 py-1.5 text-base font-semibold text-stone-800 outline-none focus:ring-2 focus:ring-[#e7e5e4] sm:text-sm"
               value={field.label}
               onChange={(e) => onChange(field.id, { label: e.target.value })}
               onBlur={() => setEditingLabel(false)}
@@ -206,7 +210,7 @@ function FieldRow({
             />
           ) : (
             <>
-              <span className="text-sm font-semibold text-stone-700">
+              <span className="truncate text-sm font-semibold text-stone-700">
                 {field.label}
                 {field.required && <span className="text-[#c4a35a]"> *</span>}
               </span>
@@ -214,100 +218,105 @@ function FieldRow({
                 type="button"
                 title="Edit label"
                 onClick={() => setEditingLabel(true)}
-                className="rounded p-0.5 text-stone-400 hover:bg-[#faf6eb] hover:text-[#c4a35a]"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-stone-400 touch-manipulation hover:bg-[#faf6eb] hover:text-[#c4a35a]"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </button>
               {translating && (
-                <span className="text-[10px] font-medium text-[#1c1917]">…</span>
+                <span className="text-[10px] font-medium text-[#9a7b3c]">…</span>
               )}
             </>
           )}
         </div>
-        <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-medium text-[#1c1917]">
+        <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-medium text-[#9a7b3c] touch-manipulation">
           <input
             type="checkbox"
             checked={field.include}
             onChange={(e) => onChange(field.id, { include: e.target.checked })}
-            className="h-3.5 w-3.5 rounded border-[#c4a35a] text-[#c4a35a] focus:ring-[#c4a35a]"
+            className="h-4 w-4 rounded border-[#c4a35a] text-[#c4a35a] focus:ring-[#c4a35a]"
           />
-          {includeText}
+          <span className="hidden xs:inline sm:inline">{includeText}</span>
         </label>
       </div>
-      <div className="flex items-stretch gap-2">
-        <div className="min-w-0 flex-1">
-          {field.type === "select" ? (
-            <select
-              className={fieldClass}
-              value={field.value}
-              onChange={(e) => onChange(field.id, { value: e.target.value })}
-            >
-              <option value="">{selectText}</option>
-              {field.key === "gender" ? (
-                <>
-                  <option value="male">{(field.options && field.options[0]) || "Male"}</option>
-                  <option value="female">{(field.options && field.options[1]) || "Female"}</option>
-                </>
-              ) : (
-                (field.options || []).map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))
-              )}
-            </select>
-          ) : field.type === "textarea" ? (
-            <textarea
-              className={cn(fieldClass, "min-h-[72px] resize-y")}
-              value={field.value}
-              onChange={(e) => onChange(field.id, { value: e.target.value })}
-              onBlur={() => void tryAutoTranslate()}
-              placeholder={field.placeholder}
-              rows={3}
-            />
-          ) : (
-            <input
-              type={field.type === "date" ? "date" : "text"}
-              className={fieldClass}
-              value={field.value}
-              onChange={(e) => onChange(field.id, { value: e.target.value })}
-              onBlur={() => void tryAutoTranslate()}
-              placeholder={field.placeholder}
-            />
-          )}
-        </div>
-        <div className="flex flex-col justify-center gap-0.5">
-          <button
-            type="button"
-            disabled={isFirst}
-            onClick={() => onMove(field.id, -1)}
-            className="rounded-md bg-[#c4a35a] p-1 text-white shadow-sm disabled:opacity-30 hover:bg-[#9a7b3c]"
-            title="Move up"
+
+      {/* Input — full width, never squeezed by side buttons */}
+      <div className="w-full min-w-0">
+        {field.type === "select" ? (
+          <select
+            className={fieldClass}
+            value={field.value}
+            onChange={(e) => onChange(field.id, { value: e.target.value })}
           >
-            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M5 12l5-5 5 5H5z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            disabled={isLast}
-            onClick={() => onMove(field.id, 1)}
-            className="rounded-md bg-[#c4a35a] p-1 text-white shadow-sm disabled:opacity-30 hover:bg-[#9a7b3c]"
-            title="Move down"
-          >
-            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M5 8l5 5 5-5H5z" />
-            </svg>
-          </button>
-        </div>
+            <option value="">{selectText}</option>
+            {field.key === "gender" ? (
+              <>
+                <option value="male">{(field.options && field.options[0]) || "Male"}</option>
+                <option value="female">{(field.options && field.options[1]) || "Female"}</option>
+              </>
+            ) : (
+              (field.options || []).map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))
+            )}
+          </select>
+        ) : field.type === "textarea" ? (
+          <textarea
+            className={cn(fieldClass, "min-h-[88px] resize-y")}
+            value={field.value}
+            onChange={(e) => onChange(field.id, { value: e.target.value })}
+            onBlur={() => void tryAutoTranslate()}
+            placeholder={field.placeholder}
+            rows={3}
+          />
+        ) : (
+          <input
+            type={field.type === "date" ? "date" : "text"}
+            className={fieldClass}
+            value={field.value}
+            onChange={(e) => onChange(field.id, { value: e.target.value })}
+            onBlur={() => void tryAutoTranslate()}
+            placeholder={field.placeholder}
+          />
+        )}
+      </div>
+
+      {/* Actions under input — roomy on mobile, compact on desktop */}
+      <div className="mt-2 flex items-center justify-end gap-1.5">
+        <button
+          type="button"
+          disabled={isFirst}
+          onClick={() => onMove(field.id, -1)}
+          className={btnMove}
+          title="Move up"
+          aria-label="Move field up"
+        >
+          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M5 12l5-5 5 5H5z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          disabled={isLast}
+          onClick={() => onMove(field.id, 1)}
+          className={btnMove}
+          title="Move down"
+          aria-label="Move field down"
+        >
+          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M5 8l5 5 5-5H5z" />
+          </svg>
+        </button>
         {onRemove && (
           <button
             type="button"
             onClick={() => onRemove(field.id)}
-            className="self-center rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+            className="inline-flex h-10 min-w-[40px] items-center justify-center rounded-lg px-2 text-sm font-medium text-red-600 touch-manipulation hover:bg-red-50 sm:h-8"
             title="Remove field"
+            aria-label="Remove field"
           >
             ✕
           </button>
@@ -615,7 +624,7 @@ export default function BiodataForm() {
   }, [showPreview, data, buildDataFromFields]);
 
   return (
-    <div className="mx-auto w-full max-w-5xl">
+    <div className="mx-auto w-full max-w-5xl px-0">
       {!showPreview && (
         <div className="mb-6 flex flex-wrap items-center justify-center gap-2 sm:mb-8">
           {STEP_KEYS.map((key, i) => (
@@ -642,7 +651,7 @@ export default function BiodataForm() {
         <div className="overflow-hidden rounded-2xl border border-[#e7e5e4]/80 bg-[#faf8f5] shadow-xl shadow-[#f0ebe3]/40">
           <div className="h-1 bg-gradient-to-r from-[#c4a35a] via-[#c4a35a] to-[#c4a35a]" />
 
-          <div className="p-5 sm:p-8">
+          <div className="p-3 sm:p-6 lg:p-8">
             {step === 0 && (
               <div className="mb-6 space-y-5">
                 {/* Languages */}
@@ -757,10 +766,10 @@ export default function BiodataForm() {
 
               <div
                 className={cn(
-                  "grid gap-3",
+                  "grid gap-3 sm:gap-4",
                   currentSection === "contact"
                     ? "grid-cols-1"
-                    : "grid-cols-1 md:grid-cols-2"
+                    : "grid-cols-1 lg:grid-cols-2"
                 )}
               >
                 {currentFields.map((f, idx) => (
@@ -848,27 +857,27 @@ export default function BiodataForm() {
               <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
             )}
 
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
               <button
                 type="button"
                 onClick={prev}
                 disabled={step === 0}
-                className="rounded-xl border border-stone-200 bg-white px-5 py-2.5 text-sm font-semibold text-stone-600 disabled:opacity-40 hover:bg-stone-50"
+                className="order-3 min-h-[44px] w-full rounded-xl border border-stone-200 bg-white px-5 py-2.5 text-sm font-semibold text-stone-600 touch-manipulation disabled:opacity-40 hover:bg-stone-50 sm:order-1 sm:w-auto"
               >
                 {t(lang, "goBack")}
               </button>
-              <div className="flex flex-wrap gap-2">
+              <div className="order-1 flex w-full flex-col gap-2 sm:order-2 sm:w-auto sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => addField(currentSection)}
-                  className="rounded-xl border border-[#c4a35a] bg-white px-4 py-2.5 text-sm font-semibold text-[#9a7b3c] hover:bg-[#faf6eb]"
+                  className="min-h-[44px] w-full rounded-xl border border-[#c4a35a] bg-white px-4 py-2.5 text-sm font-semibold text-[#9a7b3c] touch-manipulation hover:bg-[#faf6eb] sm:w-auto"
                 >
                   {t(lang, "customField")}
                 </button>
                 <button
                   type="button"
                   onClick={next}
-                  className="rounded-xl bg-gradient-to-r from-[#c4a35a] to-[#9a7b3c] px-6 py-2.5 text-sm font-bold text-white shadow-md hover:from-[#9a7b3c] hover:to-[#c4a35a]"
+                  className="min-h-[48px] w-full rounded-xl bg-gradient-to-r from-[#c4a35a] to-[#9a7b3c] px-6 py-3 text-sm font-bold text-white shadow-md touch-manipulation hover:from-[#9a7b3c] hover:to-[#c4a35a] sm:w-auto sm:py-2.5"
                 >
                   {step < 2 ? t(lang, "nextStep") : t(lang, "previewBiodata")}
                 </button>

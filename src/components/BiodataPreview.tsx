@@ -91,7 +91,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
         ref={ref}
         data-biodata-preview
         id="biodata-preview-card"
-        className="relative mx-auto w-full max-w-[440px] overflow-hidden rounded-sm shadow-xl sm:max-w-[520px]"
+        className="relative mx-auto w-full max-w-full sm:max-w-[440px] overflow-hidden rounded-sm shadow-xl sm:max-w-full sm:max-w-[520px]"
         style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
           aspectRatio: "210 / 297",
@@ -229,7 +229,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
         ref={ref}
         data-biodata-preview
         id="biodata-preview-card"
-        className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-sm border border-[#e7e5e4] bg-[#faf8f5] shadow-lg sm:max-w-[480px]"
+        className="relative mx-auto w-full max-w-full sm:max-w-[420px] overflow-hidden rounded-sm border border-[#e7e5e4] bg-[#faf8f5] shadow-lg sm:max-w-full sm:max-w-[480px]"
         style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
           aspectRatio: "210 / 297",
@@ -353,7 +353,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
       <div
         ref={ref}
         data-biodata-preview
-        className="relative mx-auto w-full max-w-[420px]"
+        className="relative mx-auto w-full max-w-full sm:max-w-[420px]"
         style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
       >
         <div
@@ -426,7 +426,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
     <div
       ref={ref}
       data-biodata-preview
-      className="mx-auto w-full max-w-[420px] overflow-hidden rounded-xl border-2 bg-white shadow-lg"
+      className="mx-auto w-full max-w-full sm:max-w-[420px] overflow-hidden rounded-xl border-2 bg-white shadow-lg"
       style={{ borderColor: template.borderColor }}
     >
       <div className="px-5 py-4 text-center text-white" style={{ background: template.accent }}>
