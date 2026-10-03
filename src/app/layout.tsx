@@ -1,10 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Mukta } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const mukta = Mukta({
+  subsets: ["latin", "devanagari"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-mukta",
   display: "swap",
 });
 
@@ -50,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} h-full antialiased`}
+      className={`${inter.variable} ${mukta.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body

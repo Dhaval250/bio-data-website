@@ -133,3 +133,76 @@ export function getClassicTheme(id: string): ClassicTheme | null {
   };
   return themes[id] || null;
 }
+
+
+/**
+ * Layouts for the 5 "art" templates. The live preview draws the user's data on top of
+ * /templates/<id>.bg.webp (the real template artwork with the sample text removed), so the
+ * preview always matches the design the user picked in the gallery.
+ *
+ * Units: `left`, `photo.left` are % of page width; `*Y` / `photo.top` are % of page height;
+ * everything else is cqw (1cqw = 1% of page width) so the page scales on screen and in print.
+ */
+export type ArtLayout = {
+  bg: string;
+  left: number; // left margin (% width)
+  labelW: number; // label column width (cqw) -> where the ":" sits
+  rowFont: number;
+  maxY: number; // text must end above this (fraction of page height)
+  pitch: number; // row height
+  headFont: number;
+  headY: number; // "Personal Details" heading centre (% height)
+  headGap: number; // heading centre -> first row centre (cqw)
+  secGap: number; // last row centre -> next heading centre (cqw)
+  photo: { left: number; top: number; w: number; h: number }; // %, %, cqw, cqw
+  header: { y: number; stacked?: boolean; iconY?: number; mantraY?: number; iconSize: number; titleFont: number; circleIcon?: boolean };
+  color: { title: string; heading: string; label: string; text: string; photoBorder: string };
+  defaults: { title: string; mantra: string };
+};
+
+export const ART_LAYOUTS: Record<string, ArtLayout> = {
+  "abstract-lotus": {
+    bg: "/templates/abstract-lotus.bg.webp",
+    left: 8.9, labelW: 20.1, maxY: 0.85, rowFont: 2.25, pitch: 3.29, headFont: 3.2, headY: 20.6, headGap: 3.8, secGap: 4.9,
+    photo: { left: 75.3, top: 20.4, w: 22.7, h: 28.6 },
+    header: { y: 11.7, iconSize: 7.4, titleFont: 3.6 },
+    color: { title: "#a31c3a", heading: "#a31c3a", label: "#1f1f1f", text: "#1f1f1f", photoBorder: "#a31c3a" },
+    defaults: { title: "Biodata", mantra: "|| हर हर महादेव ||" },
+  },
+  "abstract-orange": {
+    bg: "/templates/abstract-orange.bg.webp",
+    left: 12.6, labelW: 20.1, maxY: 0.84, rowFont: 2.15, pitch: 3.13, headFont: 3.3, headY: 17.8, headGap: 3.9, secGap: 4.8,
+    photo: { left: 67.6, top: 16.9, w: 22.8, h: 28.4 },
+    header: { y: 9.6, iconSize: 7.2, titleFont: 3.6, circleIcon: true },
+    color: { title: "#c0601c", heading: "#c0601c", label: "#26211c", text: "#26211c", photoBorder: "#b5651d" },
+    defaults: { title: "Marriage Biodata", mantra: "|| Ganeshaya Namah ||" },
+  },
+  "abstract-red-velvet": {
+    bg: "/templates/abstract-red-velvet.bg.webp",
+    left: 12.6, labelW: 20.1, maxY: 0.9, rowFont: 2.3, pitch: 3.38, headFont: 3.4, headY: 17.2, headGap: 3.96, secGap: 5.1,
+    photo: { left: 67.6, top: 16.9, w: 22.8, h: 28.4 },
+    header: { y: 9.8, iconSize: 7.4, titleFont: 3.5, circleIcon: true },
+    color: { title: "#9b1c24", heading: "#9b1c24", label: "#1f1f1f", text: "#1f1f1f", photoBorder: "#8b1a1a" },
+    defaults: { title: "बायोडाटा", mantra: "|| श्री गणेशाय नमः ||" },
+  },
+  "abstract-rose": {
+    bg: "/templates/abstract-rose.bg.webp",
+    left: 13.9, labelW: 20.1, maxY: 0.91, rowFont: 2.3, pitch: 3.36, headFont: 3.3, headY: 28.8, headGap: 3.8, secGap: 5.1,
+    photo: { left: 74.3, top: 29.5, w: 22.9, h: 28.4 },
+    header: { y: 10.4, stacked: true, iconY: 15.5, mantraY: 20.5, iconSize: 7.6, titleFont: 3.6 },
+    color: { title: "#f7d56e", heading: "#f7d56e", label: "#ffffff", text: "#ffffff", photoBorder: "#f7d56e" },
+    defaults: { title: "Marriage Biodata", mantra: "|| श्री गणेशाय नमः ||" },
+  },
+  "abstract-blue": {
+    bg: "/templates/abstract-blue.bg.webp",
+    left: 8.9, labelW: 20.1, maxY: 0.9, rowFont: 2.25, pitch: 3.37, headFont: 3.3, headY: 19.9, headGap: 3.8, secGap: 5.1,
+    photo: { left: 74.3, top: 20.2, w: 22.6, h: 28.0 },
+    header: { y: 9.6, iconSize: 6.2, titleFont: 3.6 },
+    color: { title: "#f2ee8c", heading: "#f2ee8c", label: "#ffffff", text: "#ffffff", photoBorder: "#e8e07a" },
+    defaults: { title: "Biodata", mantra: "|| नमो बुध्दाय ||" },
+  },
+};
+
+export function getArtLayout(id: string): ArtLayout | null {
+  return ART_LAYOUTS[id] || null;
+}

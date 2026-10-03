@@ -5,7 +5,7 @@ import { BiodataFormData, FormFieldRow, Language } from "@/lib/types";
 import TemplateSelector from "./TemplateSelector";
 import BiodataPreview from "./BiodataPreview";
 import { cn } from "@/lib/utils";
-import { generateBiodataPdf } from "@/lib/generatePdf";
+
 import { t, fieldLabel, fieldPlaceholder } from "@/lib/i18n";
 
 const LANGS = [
@@ -51,7 +51,7 @@ const OPTIONAL_CHIPS = [
 ] as const;
 
 const fieldClass =
-  "w-full min-h-[48px] rounded-2xl border border-[#e8e0d4] bg-white px-4 py-3 text-base text-[#1c1917] shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none transition placeholder:text-[#a8a29e] focus:border-[#c4a35a] focus:shadow-[0_0_0_3px_rgba(196,163,90,0.18)] sm:min-h-[44px] sm:text-sm touch-manipulation";
+  "w-full min-h-[44px] max-w-full rounded-xl border border-[#e8e0d4] bg-white px-3 py-2.5 text-base text-[#1c1917] shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none transition placeholder:text-[#a8a29e] focus:border-[#c4a35a] focus:shadow-[0_0_0_3px_rgba(196,163,90,0.18)] sm:min-h-[42px] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm touch-manipulation appearance-none";
 
 const SESSION_KEY = "fbm-biodata-session-v1";
 
@@ -244,11 +244,11 @@ function FieldRow({
   };
 
   const btnIcon =
-    "inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#e8e0d4] bg-[#faf8f5] text-[#9a7b3c] transition active:scale-95 disabled:opacity-25 touch-manipulation";
+    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e8e0d4] bg-[#faf8f5] text-[#9a7b3c] transition active:scale-95 disabled:opacity-25 touch-manipulation sm:h-8 sm:w-8";
 
   return (
-    <div className="rounded-2xl border border-[#ebe4d8] bg-white p-3 shadow-[0_2px_8px_rgba(28,25,23,0.04)] sm:p-4">
-      {/* Label + Include */}
+    <div className="w-full max-w-full overflow-hidden rounded-xl border border-[#ebe4d8] bg-white p-3 shadow-[0_1px_4px_rgba(28,25,23,0.04)] sm:rounded-2xl sm:p-4">
+      {/* Row 1: Label + Include — tight on mobile */}
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-1">
           {editingLabel ? (
@@ -262,7 +262,7 @@ function FieldRow({
             />
           ) : (
             <>
-              <span className="truncate text-[13px] font-semibold text-stone-700 sm:text-sm">
+              <span className="truncate text-[13px] font-semibold leading-tight text-stone-700 sm:text-sm">
                 {field.label}
                 {(field.required || field.key === "fullName") && (
                   <span className="text-[#c4a35a]"> *</span>
@@ -272,7 +272,7 @@ function FieldRow({
                 type="button"
                 title="Edit label"
                 onClick={() => setEditingLabel(true)}
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-stone-400 touch-manipulation hover:bg-[#faf6eb] hover:text-[#c4a35a]"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-stone-400 touch-manipulation hover:bg-[#faf6eb] hover:text-[#c4a35a] sm:h-7 sm:w-7"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -291,95 +291,101 @@ function FieldRow({
             onChange={(e) => onChange(field.id, { include: e.target.checked })}
             className="h-4 w-4 rounded border-[#c4a35a] text-[#c4a35a] focus:ring-[#c4a35a]"
           />
-          <span>Include</span>
+          <span className="hidden xs:inline sm:inline">{includeText}</span>
         </label>
       </div>
 
-      {/* Input — always full width on mobile */}
-      <div className="w-full min-w-0">
-        {field.type === "select" ? (
-          <select
-            className={fieldClass}
-            value={field.value}
-            data-field-key={field.key}
-            onChange={(e) => onChange(field.id, { value: e.target.value })}
-          >
-            <option value="">{selectText}</option>
-            {field.key === "gender" ? (
-              <>
-                <option value="male">{(field.options && field.options[0]) || "Male"}</option>
-                <option value="female">{(field.options && field.options[1]) || "Female"}</option>
-              </>
-            ) : (
-              (field.options || []).map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))
-            )}
-          </select>
-        ) : field.type === "textarea" ? (
-          <textarea
-            className={cn(fieldClass, "min-h-[88px] resize-y")}
-            value={field.value}
-            onChange={(e) => onChange(field.id, { value: e.target.value })}
-            onBlur={() => void tryAutoTranslate()}
-            placeholder={field.placeholder}
-            rows={3}
-          />
-        ) : (
-          <input
-            type={field.type === "date" ? "date" : "text"}
-            className={fieldClass}
-            value={field.value}
-            data-field-key={field.key}
-            onChange={(e) => onChange(field.id, { value: e.target.value })}
-            onBlur={() => void tryAutoTranslate()}
-            placeholder={field.placeholder}
-            autoComplete={field.key === "fullName" ? "name" : "off"}
-          />
-        )}
-      </div>
+      {/* Row 2: Input full width + actions on same line for sm+ */}
+      <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="min-w-0 flex-1">
+          {field.type === "select" ? (
+            <select
+              className={cn(fieldClass, "pr-8")}
+              value={field.value}
+              data-field-key={field.key}
+              onChange={(e) => onChange(field.id, { value: e.target.value })}
+            >
+              <option value="">{selectText}</option>
+              {field.key === "gender" ? (
+                <>
+                  <option value="male">{(field.options && field.options[0]) || "Male"}</option>
+                  <option value="female">{(field.options && field.options[1]) || "Female"}</option>
+                </>
+              ) : (
+                (field.options || []).map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))
+              )}
+            </select>
+          ) : field.type === "textarea" ? (
+            <textarea
+              className={cn(fieldClass, "min-h-[80px] resize-y")}
+              value={field.value}
+              onChange={(e) => onChange(field.id, { value: e.target.value })}
+              onBlur={() => void tryAutoTranslate()}
+              placeholder={field.placeholder}
+              rows={3}
+            />
+          ) : (
+            <input
+              type={field.type === "date" ? "date" : "text"}
+              className={cn(
+                fieldClass,
+                field.type === "date" &&
+                  "min-h-[44px] [color-scheme:light] [-webkit-appearance:none] appearance-none"
+              )}
+              value={field.value}
+              data-field-key={field.key}
+              onChange={(e) => onChange(field.id, { value: e.target.value })}
+              onBlur={() => void tryAutoTranslate()}
+              placeholder={field.placeholder}
+              autoComplete={field.key === "fullName" ? "name" : "off"}
+            />
+          )}
+        </div>
 
-      {/* Compact actions — right aligned, small pills (mobile friendly) */}
-      <div className="mt-2 flex items-center justify-end gap-1.5">
-        <button
-          type="button"
-          disabled={isFirst}
-          onClick={() => onMove(field.id, -1)}
-          className={btnIcon}
-          title="Move up"
-          aria-label="Move field up"
-        >
-          <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5 12l5-5 5 5H5z" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          disabled={isLast}
-          onClick={() => onMove(field.id, 1)}
-          className={btnIcon}
-          title="Move down"
-          aria-label="Move field down"
-        >
-          <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5 8l5 5 5-5H5z" />
-          </svg>
-        </button>
-        {onRemove && (
+        {/* Actions: under input on phone, beside on desktop */}
+        <div className="flex items-center justify-end gap-1.5 sm:justify-start">
           <button
             type="button"
-            onClick={() => onRemove(field.id)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 active:scale-95 touch-manipulation"
-            title="Remove field"
-            aria-label="Remove field"
+            disabled={isFirst}
+            onClick={() => onMove(field.id, -1)}
+            className={btnIcon}
+            title="Move up"
+            aria-label="Move field up"
           >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5 12l5-5 5 5H5z" />
             </svg>
           </button>
-        )}
+          <button
+            type="button"
+            disabled={isLast}
+            onClick={() => onMove(field.id, 1)}
+            className={btnIcon}
+            title="Move down"
+            aria-label="Move field down"
+          >
+            <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5 8l5 5 5-5H5z" />
+            </svg>
+          </button>
+          {onRemove && (
+            <button
+              type="button"
+              onClick={() => onRemove(field.id)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 active:scale-95 touch-manipulation sm:h-8 sm:w-8"
+              title="Remove field"
+              aria-label="Remove field"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -799,41 +805,33 @@ export default function BiodataForm() {
     setIsGenerating(true);
     setError("");
     try {
-      const d = buildDataFromFields();
-      setData(d);
-      await generateBiodataPdf({
-        fullName: d.fullName,
-        dob: d.dob,
-        gender: d.gender,
-        height: d.height,
-        religion: d.religion,
-        caste: d.caste,
-        rashi: d.rashi,
-        nakshatra: d.nakshatra,
-        gotra: d.gotra,
-        manglik: d.manglik,
-        education: d.education,
-        occupation: d.occupation,
-        fatherName: d.fatherName,
-        fatherOccupation: d.fatherOccupation,
-        motherName: d.motherName,
-        motherOccupation: d.motherOccupation,
-        siblings: d.siblings,
-        nativePlace: d.nativePlace,
-        familyDetails: d.familyDetails,
-        phone: d.phone,
-        email: d.email,
-        address: d.address,
-        partnerPreferences: d.partnerPreferences,
-        photoDataUrl: d.photoDataUrl,
-        biodataTitle: d.biodataTitle,
-        mantra: d.mantra,
-        customFields: (d.customFields || []).filter((f) => f.label.trim() && f.value.trim()),
-      });
+      // Must show the live preview — PDF = exact same template on screen
+      if (!showPreview) {
+        setError("Please open Preview first, then Download.");
+        return;
+      }
+      const card =
+        document.getElementById("biodata-preview-card") ||
+        document.querySelector<HTMLElement>("[data-biodata-preview]");
+      if (!card) {
+        setError("Preview card not found. Open Preview again.");
+        return;
+      }
+
+      // Print only the preview card → Save as PDF = 100% same design
+      const cleanup = () => {
+        document.body.classList.remove("printing-biodata");
+        setIsGenerating(false);
+      };
+      document.body.classList.add("printing-biodata");
+      window.addEventListener("afterprint", cleanup, { once: true });
+      // Fallback if afterprint does not fire
+      setTimeout(cleanup, 2500);
+      window.print();
     } catch (err) {
       console.error(err);
+      document.body.classList.remove("printing-biodata");
       setError("PDF failed: " + (err instanceof Error ? err.message : "unknown"));
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -851,7 +849,7 @@ export default function BiodataForm() {
   }, [showPreview, data, buildDataFromFields]);
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-0">
+    <div className="mx-auto w-full max-w-5xl min-w-0 px-0 overflow-x-hidden">
       {!showPreview && (
         <div className="mb-6 flex flex-wrap items-center justify-center gap-2 sm:mb-8">
           {STEP_KEYS.map((key, i) => (
@@ -875,7 +873,7 @@ export default function BiodataForm() {
       )}
 
       {!showPreview ? (
-        <div className="overflow-hidden rounded-2xl border border-[#e7e5e4]/80 bg-[#faf8f5] shadow-xl shadow-[#f0ebe3]/40">
+        <div className="w-full max-w-full overflow-hidden rounded-xl border border-[#e7e5e4]/80 bg-[#faf8f5] shadow-xl shadow-[#f0ebe3]/40 sm:rounded-2xl">
           <div className="h-1 bg-gradient-to-r from-[#c4a35a] via-[#c4a35a] to-[#c4a35a]" />
 
           <div className="p-3 sm:p-6 lg:p-8">

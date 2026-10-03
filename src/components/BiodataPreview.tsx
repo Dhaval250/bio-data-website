@@ -2,7 +2,8 @@
 
 import { forwardRef } from "react";
 import { BiodataFormData } from "@/lib/types";
-import { getTemplate, getClassicTheme } from "@/lib/templates";
+import { getTemplate, getArtLayout } from "@/lib/templates";
+import TemplateArtPreview from "./TemplateArtPreview";
 
 interface Props {
   data: BiodataFormData;
@@ -39,10 +40,10 @@ function SectionBar({
 function Line({ label, value }: { label: string; value?: string }) {
   if (!value || !String(value).trim()) return null;
   return (
-    <div className="grid grid-cols-[minmax(0,42%)_8px_minmax(0,1fr)] gap-x-1 text-[11px] leading-[1.7] text-[#3f3a34]">
+    <div className="grid grid-cols-[minmax(0,38%)_10px_minmax(0,1fr)] items-start gap-x-1 text-[11px] leading-[1.65] text-[#3f3a34]">
       <span className="text-[#5c564e]">{label}</span>
       <span className="text-[#9a9288]">:</span>
-      <span className="break-words font-medium">{value}</span>
+      <span className="min-w-0 break-all font-medium [overflow-wrap:anywhere]">{value}</span>
     </div>
   );
 }
@@ -52,7 +53,6 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
   ref
 ) {
   const template = getTemplate(data.templateId);
-  const classicTheme = getClassicTheme(template.id);
   const isElegant =
     template.id === "elegant-profile" || template.id === "pearl-white";
   const isTemple =
@@ -65,204 +65,46 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
     (f) => f.label?.trim() && f.value?.trim()
   );
 
-  // ——— CLASSIC ABSTRACT TEMPLATES (orange / lotus / red velvet / rose / blue) ———
-  if (classicTheme) {
-    const th = classicTheme;
-    const line = (label: string, value?: string) => {
-      if (!value || !String(value).trim()) return null;
-      return (
-        <div
-          key={label}
-          className="grid grid-cols-[minmax(0,40%)_8px_minmax(0,1fr)] gap-x-1 text-[11px] leading-[1.7] sm:grid-cols-[140px_12px_1fr] sm:text-[12.5px]"
-          style={{ color: th.textColor }}
-        >
-          <span style={{ color: th.labelColor }}>{label}</span>
-          <span style={{ opacity: 0.45 }}>:</span>
-          <span className="break-words font-medium">{value}</span>
-        </div>
-      );
-    };
-
-    const isFramed = template.id === "abstract-red-velvet";
-    const showFloral = template.id === "abstract-orange" || template.id === "abstract-lotus";
-
-    return (
-      <div
-        ref={ref}
-        data-biodata-preview
-        id="biodata-preview-card"
-        className="relative mx-auto w-full max-w-[100%] overflow-hidden rounded-lg shadow-xl sm:max-w-[480px] sm:rounded-sm"
-        style={{
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          background: th.pageBg,
-        }}
-      >
-        {showFloral && (
-          <>
-            <div className="pointer-events-none absolute -left-6 -top-4 h-36 w-36 opacity-70" aria-hidden
-              style={{ background: "radial-gradient(circle at 30% 40%, #f9c4c0 0%, transparent 55%), radial-gradient(circle at 70% 30%, #f5d0c8 0%, transparent 50%)" }} />
-            <div className="pointer-events-none absolute -right-4 -top-2 h-28 w-28 opacity-55" aria-hidden
-              style={{ background: "radial-gradient(circle at 60% 40%, #f9c4c0 0%, transparent 55%)" }} />
-            <div className="pointer-events-none absolute -bottom-4 -left-4 h-32 w-40 opacity-60" aria-hidden
-              style={{ background: "radial-gradient(circle at 40% 50%, #f5d0c8 0%, transparent 55%)" }} />
-            <div className="pointer-events-none absolute -bottom-2 -right-6 h-36 w-36 opacity-65" aria-hidden
-              style={{ background: "radial-gradient(circle at 50% 40%, #f9c4c0 0%, transparent 50%)" }} />
-          </>
-        )}
-
-        {/* ornamental corners for dark themes */}
-        {(template.id === "abstract-rose" || template.id === "abstract-blue") && (
-          <>
-            <div className="pointer-events-none absolute left-2 top-2 text-2xl opacity-40" style={{ color: th.titleColor }} aria-hidden>❧</div>
-            <div className="pointer-events-none absolute right-2 top-2 text-2xl opacity-40" style={{ color: th.titleColor }} aria-hidden>❧</div>
-            <div className="pointer-events-none absolute bottom-2 left-2 text-2xl opacity-40" style={{ color: th.titleColor }} aria-hidden>❧</div>
-            <div className="pointer-events-none absolute bottom-2 right-2 text-2xl opacity-40" style={{ color: th.titleColor }} aria-hidden>❧</div>
-          </>
-        )}
-
-        <div
-          id="biodata-print-inner"
-          className={
-            isFramed
-              ? "relative z-[1] m-3 flex min-h-[600px] flex-col rounded-xl bg-white p-4 shadow-inner sm:m-5 sm:p-6"
-              : "relative z-[1] m-3 flex min-h-[600px] flex-col p-4 sm:m-4 sm:p-6"
-          }
-          style={
-            !isFramed && th.frame
-              ? { border: `1.5px solid ${th.frame}`, boxShadow: `inset 0 0 0 1px ${th.frame}55` }
-              : isFramed
-                ? { boxShadow: "0 0 0 10px #7f1d1d, 0 0 0 12px #c4a35a33" }
-                : undefined
-          }
-        >
-          {/* Header */}
-          <div className="mb-4 flex shrink-0 flex-wrap items-center justify-center gap-2 sm:gap-3">
-            <h1 className="text-lg font-bold tracking-wide sm:text-xl" style={{ color: th.titleColor }}>
-              {data.biodataTitle?.trim() || "Marriage Biodata"}
-            </h1>
-            <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl shadow-sm sm:h-11 sm:w-11"
-              style={{
-                border: `2px solid ${th.photoBorder}`,
-                background: th.dark ? "rgba(255,255,255,0.08)" : "linear-gradient(#fff8e7,#f5e6c8)",
-              }}
-              aria-hidden
-            >
-              {data.godImage || "🕉️"}
-            </span>
-            <p className="text-sm font-semibold tracking-wide sm:text-base" style={{ color: th.titleColor }}>
-              {data.mantra?.trim() || "|| Shri Ganeshaya Namah ||"}
-            </p>
-          </div>
-
-          <div className="flex min-h-0 flex-1 gap-3 sm:gap-5">
-            <div className="min-w-0 flex-1">
-              <h2 className="mb-2 text-base font-bold sm:text-lg" style={{ color: th.sectionColor }}>
-                Personal Details
-              </h2>
-              <div className="space-y-0">
-                {line("Full Name", data.fullName)}
-                {line("Date of Birth", data.dob)}
-                {line("Height", data.height)}
-                {line("Place of Birth", data.nativePlace)}
-                {line("Religion", data.religion)}
-                {line("Caste", data.caste)}
-                {line("Zodiac Sign", data.rashi)}
-                {line("Nakshatra", data.nakshatra)}
-                {line("Manglik", data.manglik)}
-                {line("Gotra", data.gotra)}
-                {line("Higher Education", data.education)}
-                {line("Occupation", data.occupation)}
-                {customRows.slice(0, 4).map((f) => line(f.label, f.value))}
-              </div>
-
-              <h2 className="mb-2 mt-4 text-base font-bold sm:text-lg" style={{ color: th.sectionColor }}>
-                Family Details
-              </h2>
-              <div className="space-y-0">
-                {line("Father's Name", data.fatherName)}
-                {line("Father's Occupation", data.fatherOccupation)}
-                {line("Mother's Name", data.motherName)}
-                {line("Mother's Occupation", data.motherOccupation)}
-                {line("Brothers / Sisters", data.siblings)}
-                {line("Family Background", data.familyDetails)}
-              </div>
-
-              <h2 className="mb-2 mt-4 text-base font-bold sm:text-lg" style={{ color: th.sectionColor }}>
-                Contact Details
-              </h2>
-              <div className="space-y-0">
-                {line("Mobile Number", data.phone)}
-                {line("Email", data.email)}
-                {line("Address", data.address)}
-              </div>
-            </div>
-
-            <div className="mt-1 shrink-0">
-              <div
-                className="h-[120px] w-[95px] overflow-hidden rounded shadow-md sm:h-[140px] sm:w-[110px]"
-                style={{ border: `2.5px solid ${th.photoBorder}`, background: th.dark ? "rgba(0,0,0,0.25)" : "#f5ebe0" }}
-              >
-                {data.photoDataUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={data.photoDataUrl} alt={data.fullName || "Photo"} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full flex-col items-center justify-center opacity-50">
-                    <span className="text-3xl">👤</span>
-                    <span className="mt-1 text-[8px] tracking-wider">PHOTO</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  // ——— ARTWORK TEMPLATES (Orange / Lotus / Red Velvet / Rose / Blue) ———
+  // Drawn on top of the real template artwork so the preview matches the selected design.
+  if (getArtLayout(template.id)) {
+    return <TemplateArtPreview ref={ref} data={{ ...data, templateId: template.id }} />;
   }
 
-  // ——— ELEGANT PROFILE (A4 full-page, no empty space) ———
+  // ——— ELEGANT PROFILE (content-height, no forced empty bottom) ———
   if (isElegant) {
     return (
       <div
         ref={ref}
         data-biodata-preview
         id="biodata-preview-card"
-        className="relative mx-auto w-full max-w-full sm:max-w-[420px] overflow-hidden rounded-sm border border-[#e7e5e4] bg-[#faf8f5] shadow-lg sm:max-w-full sm:max-w-[480px]"
-        style={{
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          aspectRatio: "210 / 297",
-          minHeight: "620px",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        className="relative mx-auto w-full max-w-full overflow-hidden rounded-sm border border-[#e7e5e4] bg-[#faf8f5] shadow-lg sm:max-w-[480px]"
+        style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
       >
         <Leaf className="pointer-events-none absolute left-2 top-2 opacity-80" />
         <Leaf className="pointer-events-none absolute bottom-2 right-2 rotate-180 opacity-80" />
 
         <div
           id="biodata-print-inner"
-          className="relative z-[1] flex h-full min-h-full flex-1 flex-col p-5 sm:p-7"
+          className="relative z-[1] flex flex-col p-5 pb-6 sm:p-7 sm:pb-8"
         >
           {/* Header + photo */}
-          <div className="flex shrink-0 items-start justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-[#2c2825] sm:text-4xl">
+          <div className="flex shrink-0 items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-bold tracking-tight text-[#2c2825] sm:text-3xl">
                 {data.biodataTitle?.trim() || data.fullName || "Biodata"}
               </h1>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-xl leading-none" aria-hidden>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span className="text-lg leading-none" aria-hidden>
                   {data.godImage || "🕉️"}
                 </span>
-                <p className="text-[12px] font-medium tracking-wide text-[#78716c]">
+                <p className="text-[11px] font-medium tracking-wide text-[#78716c] sm:text-[12px]">
                   {data.mantra?.trim() || "|| Shri Ganeshaya Namah ||"}
                 </p>
               </div>
               <div className="mt-2 h-px w-10 bg-[#c4b5a0]" />
-              <p className="mt-2 max-w-[220px] text-[11px] italic text-[#8a8278]">
-                A simple introduction to a better tomorrow…
-              </p>
             </div>
-            <div className="flex h-[110px] w-[92px] shrink-0 flex-col items-center justify-center overflow-hidden rounded border border-[#d6cfc4] bg-[#f0ebe3]">
+            <div className="flex h-[100px] w-[84px] shrink-0 flex-col items-center justify-center overflow-hidden rounded border border-[#d6cfc4] bg-[#f0ebe3] sm:h-[110px] sm:w-[92px]">
               {data.photoDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -281,9 +123,9 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
             </div>
           </div>
 
-          {/* Two columns — flex-1 fills remaining A4 height */}
-          <div className="mt-5 grid flex-1 grid-cols-1 content-start gap-6 sm:grid-cols-2">
-            <div className="flex flex-col">
+          {/* Two columns on sm+, stacked on mobile — no empty stretch */}
+          <div className="mt-4 grid grid-cols-1 content-start gap-4 sm:mt-5 sm:grid-cols-2 sm:gap-6">
+            <div className="flex flex-col gap-0.5">
               <SectionBar icon="👤" title="PERSONAL DETAILS" />
               <Line label="Name" value={data.fullName} />
               <Line label="Date of Birth" value={data.dob} />
@@ -307,7 +149,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
               <Line label="Present Address" value={data.address} />
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-0.5">
               <SectionBar icon="👨‍👩‍👧" title="FAMILY DETAILS" />
               <Line label="Father's Name" value={data.fatherName} />
               <Line label="Mother's Name" value={data.motherName} />
@@ -316,11 +158,15 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
               <Line label="Siblings (Brothers/Sisters)" value={data.siblings} />
               <Line label="Family Background" value={data.familyDetails} />
 
-              <SectionBar icon="♥" title="EXPECTATIONS" />
-              <Line
-                label="Partner's Preference"
-                value={data.partnerPreferences}
-              />
+              {data.partnerPreferences?.trim() && (
+                <>
+                  <SectionBar icon="♥" title="EXPECTATIONS" />
+                  <Line
+                    label="Partner's Preference"
+                    value={data.partnerPreferences}
+                  />
+                </>
+              )}
 
               {customRows.length > 0 && (
                 <>
@@ -335,7 +181,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
               <Line label="Mobile No." value={data.phone} />
               <Line label="Email ID" value={data.email} />
 
-              <p className="mt-auto pt-8 text-center text-[10px] italic text-[#8a8278]">
+              <p className="mt-5 pt-2 text-center text-[10px] italic text-[#8a8278] sm:mt-6">
                 Looking forward to a meaningful journey together…
               </p>
             </div>
@@ -392,9 +238,11 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
                 ]
                   .filter(([, v]) => v && String(v).trim())
                   .map(([l, v]) => (
-                    <div key={l as string} className="grid grid-cols-[100px_1fr] gap-1">
+                    <div key={l as string} className="grid grid-cols-[95px_minmax(0,1fr)] items-start gap-1">
                       <span className="font-semibold text-stone-700">{l}</span>
-                      <span className="text-stone-800">: {v}</span>
+                      <span className="min-w-0 break-all text-stone-800 [overflow-wrap:anywhere]">
+                        : {v}
+                      </span>
                     </div>
                   ))}
               </div>
