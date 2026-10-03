@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { BiodataFormData, FormFieldRow, Language } from "@/lib/types";
 import TemplateSelector from "./TemplateSelector";
+import TemplateCarousel from "./TemplateCarousel";
 import BiodataPreview from "./BiodataPreview";
 import { cn } from "@/lib/utils";
 
@@ -1195,6 +1196,19 @@ ${styles}
       ) : (
         <div className="space-y-8">
           <BiodataPreview data={previewData} />
+
+          {/* Template strip — pick another design, preview updates instantly */}
+          <TemplateCarousel
+            selectedId={data.templateId}
+            onSelect={(id) => {
+              try {
+                sessionStorage.setItem("fbm-preferred-template", id);
+              } catch {
+                /* ignore */
+              }
+              update("templateId", id);
+            }}
+          />
 
           {/* Action buttons — same style as freebiodatamaker.com */}
           <div className="flex flex-wrap justify-center gap-3">
