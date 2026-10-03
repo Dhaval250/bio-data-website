@@ -803,95 +803,33 @@ export default function BiodataForm() {
   };
 
   const downloadPdf = async () => {
-    setIsGenerating(true);
     setError("");
+    if (!showPreview) {
+      setError("Please open Preview first, then Download.");
+      return;
+    }
+    const card =
+      document.getElementById("biodata-preview-card") ||
+      document.querySelector<HTMLElement>("[data-biodata-preview]");
+    if (!card) {
+      setError("Preview card not found. Open Preview again.");
+      return;
+    }
+
+    setIsGenerating(true);
     try {
-      // Must show the live preview — PDF = exact same template on screen
-      if (!showPreview) {
-        setError("Please open Preview first, then Download.");
-        return;
-      }
-      const card =
-        document.getElementById("biodata-preview-card") ||
-        document.querySelector<HTMLElement>("[data-biodata-preview]");
-      if (!card) {
-        setError("Preview card not found. Open Preview again.");
-        return;
-      }
-
-      // Print the card ALONE inside a hidden iframe. The iframe document contains
-      // only the card, so the printout can never include the rest of the site
-      // (and nothing can repeat on extra pages).
-      const iframe = document.createElement("iframe");
-      iframe.setAttribute("aria-hidden", "true");
-      iframe.style.cssText =
-        "position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;";
-      document.body.appendChild(iframe);
-      const idoc = iframe.contentDocument;
-      const iwin = iframe.contentWindow;
-      if (!idoc || !iwin) throw new Error("Print frame unavailable");
-
-      // Copy the app's stylesheets so the card looks identical
-      const styles = Array.from(
-        document.querySelectorAll('link[rel="stylesheet"], style')
-      )
-        .map((n) => n.outerHTML)
-        .join("\n");
-
-      idoc.open();
-      idoc.write(`<!DOCTYPE html>
-<html class="${document.documentElement.className}">
-<head>
-<meta charset="utf-8">
-<base href="${location.origin}/">
-${styles}
-<style>
-  @page { size: A4 portrait; margin: 0; }
-  html, body {
-    margin: 0 !important; padding: 0 !important; background: #fff !important;
-    width: 210mm !important; height: 297mm !important; overflow: hidden !important;
-    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
-  }
-  #biodata-preview-card, [data-biodata-preview] {
-    width: 210mm !important; max-width: 210mm !important; margin: 0 !important;
-    border-radius: 0 !important; box-shadow: none !important; border: 0 !important;
-    overflow: hidden !important; break-inside: avoid; position: relative !important;
-  }
-</style>
-</head>
-<body class="${document.body.className}">${card.outerHTML}</body>
-</html>`);
-      idoc.close();
-
-      // Wait for CSS, fonts and images inside the frame
-      await new Promise((r) => setTimeout(r, 300));
-      await Promise.all(
-        Array.from(idoc.images).map((img) =>
-          img.complete
-            ? Promise.resolve()
-            : new Promise<void>((res) => {
-                img.onload = () => res();
-                img.onerror = () => res();
-              })
-        )
-      );
-      try {
-        await idoc.fonts?.ready;
-      } catch {
-        /* ignore */
-      }
-
-      const cleanup = () => {
-        iframe.remove();
-        setIsGenerating(false);
-      };
-      iwin.addEventListener("afterprint", cleanup, { once: true });
-      setTimeout(cleanup, 120000); // safety net only
-      iwin.focus();
-      iwin.print();
+      // Direct PDF download (no print dialog): card -> canvas -> A4 PDF -> save
+      const { captureElementToPdf } = await import("@/lib/capturePreviewPdf");
+      const safe = (data.fullName || data.biodataTitle || "biodata")
+        .replace(/[^a-z0-9]+/gi, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase()
+        .slice(0, 40);
+      await captureElementToPdf(card, `${safe || "biodata"}-marriage-biodata.pdf`);
     } catch (err) {
       console.error(err);
       setError("PDF failed: " + (err instanceof Error ? err.message : "unknown"));
+    } finally {
       setIsGenerating(false);
     }
   };
