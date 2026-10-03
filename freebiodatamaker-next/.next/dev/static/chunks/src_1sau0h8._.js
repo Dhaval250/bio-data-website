@@ -1282,21 +1282,64 @@ function BiodataForm() {
                 setError("Preview card not found. Open Preview again.");
                 return;
             }
-            // Print only the preview card → Save as PDF = 100% same design
+            // Print the card ALONE inside a hidden iframe. The iframe document contains
+            // only the card, so the printout can never include the rest of the site
+            // (and nothing can repeat on extra pages).
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("aria-hidden", "true");
+            iframe.style.cssText = "position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;";
+            document.body.appendChild(iframe);
+            const idoc = iframe.contentDocument;
+            const iwin = iframe.contentWindow;
+            if (!idoc || !iwin) throw new Error("Print frame unavailable");
+            // Copy the app's stylesheets so the card looks identical
+            const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map((n)=>n.outerHTML).join("\n");
+            idoc.open();
+            idoc.write(`<!DOCTYPE html>
+<html class="${document.documentElement.className}">
+<head>
+<meta charset="utf-8">
+<base href="${location.origin}/">
+${styles}
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  html, body {
+    margin: 0 !important; padding: 0 !important; background: #fff !important;
+    width: 210mm !important; height: 297mm !important; overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+  }
+  #biodata-preview-card, [data-biodata-preview] {
+    width: 210mm !important; max-width: 210mm !important; margin: 0 !important;
+    border-radius: 0 !important; box-shadow: none !important; border: 0 !important;
+    overflow: hidden !important; break-inside: avoid; position: relative !important;
+  }
+</style>
+</head>
+<body class="${document.body.className}">${card.outerHTML}</body>
+</html>`);
+            idoc.close();
+            // Wait for CSS, fonts and images inside the frame
+            await new Promise((r)=>setTimeout(r, 300));
+            await Promise.all(Array.from(idoc.images).map((img)=>img.complete ? Promise.resolve() : new Promise((res)=>{
+                    img.onload = ()=>res();
+                    img.onerror = ()=>res();
+                })));
+            try {
+                await idoc.fonts?.ready;
+            } catch  {
+            /* ignore */ }
             const cleanup = ()=>{
-                document.body.classList.remove("printing-biodata");
+                iframe.remove();
                 setIsGenerating(false);
             };
-            document.body.classList.add("printing-biodata");
-            window.addEventListener("afterprint", cleanup, {
+            iwin.addEventListener("afterprint", cleanup, {
                 once: true
             });
-            // Fallback if afterprint does not fire
-            setTimeout(cleanup, 2500);
-            window.print();
+            setTimeout(cleanup, 120000); // safety net only
+            iwin.focus();
+            iwin.print();
         } catch (err) {
             console.error(err);
-            document.body.classList.remove("printing-biodata");
             setError("PDF failed: " + (err instanceof Error ? err.message : "unknown"));
             setIsGenerating(false);
         }
@@ -1334,12 +1377,12 @@ function BiodataForm() {
                         ]
                     }, key, true, {
                         fileName: "[project]/src/components/BiodataForm.tsx",
-                        lineNumber: 856,
+                        lineNumber: 915,
                         columnNumber: 13
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/BiodataForm.tsx",
-                lineNumber: 854,
+                lineNumber: 913,
                 columnNumber: 9
             }, this),
             !showPreview ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1349,7 +1392,7 @@ function BiodataForm() {
                         className: "h-1 bg-gradient-to-r from-[#c4a35a] via-[#c4a35a] to-[#c4a35a]"
                     }, void 0, false, {
                         fileName: "[project]/src/components/BiodataForm.tsx",
-                        lineNumber: 877,
+                        lineNumber: 936,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1367,12 +1410,12 @@ function BiodataForm() {
                                                 children: l.label
                                             }, l.id, false, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 885,
+                                                lineNumber: 944,
                                                 columnNumber: 21
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 883,
+                                        lineNumber: 942,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1385,7 +1428,7 @@ function BiodataForm() {
                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "title")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 904,
+                                                        lineNumber: 963,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1395,13 +1438,13 @@ function BiodataForm() {
                                                         placeholder: "Biodata"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 905,
+                                                        lineNumber: 964,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 903,
+                                                lineNumber: 962,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1414,7 +1457,7 @@ function BiodataForm() {
                                                         children: data.godImage || "🕉️"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 917,
+                                                        lineNumber: 976,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1422,13 +1465,13 @@ function BiodataForm() {
                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "changeGod")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 920,
+                                                        lineNumber: 979,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 912,
+                                                lineNumber: 971,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1438,7 +1481,7 @@ function BiodataForm() {
                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "mantra")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 925,
+                                                        lineNumber: 984,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1448,19 +1491,19 @@ function BiodataForm() {
                                                         placeholder: "|| Shri Ganeshaya Namah ||"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 926,
+                                                        lineNumber: 985,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 924,
+                                                lineNumber: 983,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 902,
+                                        lineNumber: 961,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1471,7 +1514,7 @@ function BiodataForm() {
                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "choosePhoto")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 937,
+                                                lineNumber: 996,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1486,19 +1529,19 @@ function BiodataForm() {
                                                             className: "h-full w-full object-cover"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/BiodataForm.tsx",
-                                                            lineNumber: 942,
+                                                            lineNumber: 1001,
                                                             columnNumber: 25
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-3xl text-stone-400",
                                                             children: "👤"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/BiodataForm.tsx",
-                                                            lineNumber: 944,
+                                                            lineNumber: 1003,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 939,
+                                                        lineNumber: 998,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1511,7 +1554,7 @@ function BiodataForm() {
                                                                 onChange: handlePhoto
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                lineNumber: 948,
+                                                                lineNumber: 1007,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1521,7 +1564,7 @@ function BiodataForm() {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "upload")
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                lineNumber: 949,
+                                                                lineNumber: 1008,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1529,7 +1572,7 @@ function BiodataForm() {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "photoHint")
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                lineNumber: 956,
+                                                                lineNumber: 1015,
                                                                 columnNumber: 23
                                                             }, this),
                                                             data.photoDataUrl && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1539,13 +1582,13 @@ function BiodataForm() {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "remove")
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                lineNumber: 958,
+                                                                lineNumber: 1017,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 947,
+                                                        lineNumber: 1006,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1556,7 +1599,7 @@ function BiodataForm() {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "photoTips")
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                lineNumber: 968,
+                                                                lineNumber: 1027,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
@@ -1566,65 +1609,65 @@ function BiodataForm() {
                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "tip1")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                        lineNumber: 970,
+                                                                        lineNumber: 1029,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "tip2")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                        lineNumber: 971,
+                                                                        lineNumber: 1030,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "tip3")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                        lineNumber: 972,
+                                                                        lineNumber: 1031,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "tip4")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                        lineNumber: 973,
+                                                                        lineNumber: 1032,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "tip5")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                        lineNumber: 974,
+                                                                        lineNumber: 1033,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                                lineNumber: 969,
+                                                                lineNumber: 1028,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 967,
+                                                        lineNumber: 1026,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 938,
+                                                lineNumber: 997,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 936,
+                                        lineNumber: 995,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 881,
+                                lineNumber: 940,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1635,7 +1678,7 @@ function BiodataForm() {
                                         children: step === 0 ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "personalDetails") : step === 1 ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "familyDetails") : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "contactDetails")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 984,
+                                        lineNumber: 1043,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1660,17 +1703,17 @@ function BiodataForm() {
                                                         })
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/BiodataForm.tsx",
-                                                    lineNumber: 1007,
+                                                    lineNumber: 1066,
                                                     columnNumber: 21
                                                 }, this)
                                             }, f.id, false, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 1001,
+                                                lineNumber: 1060,
                                                 columnNumber: 19
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 992,
+                                        lineNumber: 1051,
                                         columnNumber: 15
                                     }, this),
                                     step === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1681,7 +1724,7 @@ function BiodataForm() {
                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "addMore")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 1034,
+                                                lineNumber: 1093,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1699,19 +1742,19 @@ function BiodataForm() {
                                                         ]
                                                     }, chip.key, true, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 1041,
+                                                        lineNumber: 1100,
                                                         columnNumber: 25
                                                     }, this);
                                                 })
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 1037,
+                                                lineNumber: 1096,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 1033,
+                                        lineNumber: 1092,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1724,20 +1767,20 @@ function BiodataForm() {
                                                 children: "+"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 1067,
+                                                lineNumber: 1126,
                                                 columnNumber: 17
                                             }, this),
                                             (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "addField")
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 1062,
+                                        lineNumber: 1121,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 983,
+                                lineNumber: 1042,
                                 columnNumber: 13
                             }, this),
                             step === 2 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1776,12 +1819,12 @@ function BiodataForm() {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/BiodataForm.tsx",
-                                    lineNumber: 1074,
+                                    lineNumber: 1133,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1073,
+                                lineNumber: 1132,
                                 columnNumber: 15
                             }, this),
                             error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1789,7 +1832,7 @@ function BiodataForm() {
                                 children: error
                             }, void 0, false, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1112,
+                                lineNumber: 1171,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1803,7 +1846,7 @@ function BiodataForm() {
                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "goBack")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 1116,
+                                        lineNumber: 1175,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1815,30 +1858,30 @@ function BiodataForm() {
                                             children: step < 2 ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "nextStep") : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "previewBiodata")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/BiodataForm.tsx",
-                                            lineNumber: 1125,
+                                            lineNumber: 1184,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 1124,
+                                        lineNumber: 1183,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1115,
+                                lineNumber: 1174,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/BiodataForm.tsx",
-                        lineNumber: 879,
+                        lineNumber: 938,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/BiodataForm.tsx",
-                lineNumber: 876,
+                lineNumber: 935,
                 columnNumber: 9
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "space-y-8",
@@ -1847,7 +1890,7 @@ function BiodataForm() {
                         data: previewData
                     }, void 0, false, {
                         fileName: "[project]/src/components/BiodataForm.tsx",
-                        lineNumber: 1138,
+                        lineNumber: 1197,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1863,14 +1906,14 @@ function BiodataForm() {
                                         children: "✎"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 1147,
+                                        lineNumber: 1206,
                                         columnNumber: 15
                                     }, this),
                                     " Edit Biodata"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1142,
+                                lineNumber: 1201,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1884,7 +1927,7 @@ function BiodataForm() {
                                         children: "↓"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 1155,
+                                        lineNumber: 1214,
                                         columnNumber: 15
                                     }, this),
                                     " ",
@@ -1892,13 +1935,13 @@ function BiodataForm() {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1149,
+                                lineNumber: 1208,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/BiodataForm.tsx",
-                        lineNumber: 1141,
+                        lineNumber: 1200,
                         columnNumber: 11
                     }, this),
                     error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1906,7 +1949,7 @@ function BiodataForm() {
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/src/components/BiodataForm.tsx",
-                        lineNumber: 1159,
+                        lineNumber: 1218,
                         columnNumber: 21
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1920,13 +1963,13 @@ function BiodataForm() {
                                 children: "Click here"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1163,
+                                lineNumber: 1222,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/BiodataForm.tsx",
-                        lineNumber: 1161,
+                        lineNumber: 1220,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1938,7 +1981,7 @@ function BiodataForm() {
                                 children: "How can we support you?"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1176,
+                                lineNumber: 1235,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1946,7 +1989,7 @@ function BiodataForm() {
                                 children: "किसी भी सवाल या समस्या के लिए हमसे संपर्क करें।"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1179,
+                                lineNumber: 1238,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1961,7 +2004,7 @@ function BiodataForm() {
                                                 children: "✉️"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 1188,
+                                                lineNumber: 1247,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1972,7 +2015,7 @@ function BiodataForm() {
                                                         children: "Email Support:"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 1192,
+                                                        lineNumber: 1251,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1980,19 +2023,19 @@ function BiodataForm() {
                                                         children: "Pankajahir526@gmail.com"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 1193,
+                                                        lineNumber: 1252,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 1191,
+                                                lineNumber: 1250,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 1184,
+                                        lineNumber: 1243,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -2006,7 +2049,7 @@ function BiodataForm() {
                                                 children: "💬"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 1205,
+                                                lineNumber: 1264,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2017,7 +2060,7 @@ function BiodataForm() {
                                                         children: "WhatsApp Support:"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 1209,
+                                                        lineNumber: 1268,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2025,37 +2068,37 @@ function BiodataForm() {
                                                         children: "+91 9773424517"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                                        lineNumber: 1210,
+                                                        lineNumber: 1269,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                                lineNumber: 1208,
+                                                lineNumber: 1267,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/BiodataForm.tsx",
-                                        lineNumber: 1199,
+                                        lineNumber: 1258,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1183,
+                                lineNumber: 1242,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/BiodataForm.tsx",
-                        lineNumber: 1172,
+                        lineNumber: 1231,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/BiodataForm.tsx",
-                lineNumber: 1137,
+                lineNumber: 1196,
                 columnNumber: 9
             }, this),
             showGodModal && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2070,7 +2113,7 @@ function BiodataForm() {
                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "selectGod")
                         }, void 0, false, {
                             fileName: "[project]/src/components/BiodataForm.tsx",
-                            lineNumber: 1229,
+                            lineNumber: 1288,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2086,12 +2129,12 @@ function BiodataForm() {
                                     children: g.emoji
                                 }, g.id, false, {
                                     fileName: "[project]/src/components/BiodataForm.tsx",
-                                    lineNumber: 1232,
+                                    lineNumber: 1291,
                                     columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/BiodataForm.tsx",
-                            lineNumber: 1230,
+                            lineNumber: 1289,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2103,29 +2146,29 @@ function BiodataForm() {
                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$i18n$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["t"])(lang, "close")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/BiodataForm.tsx",
-                                lineNumber: 1252,
+                                lineNumber: 1311,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/BiodataForm.tsx",
-                            lineNumber: 1251,
+                            lineNumber: 1310,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/BiodataForm.tsx",
-                    lineNumber: 1225,
+                    lineNumber: 1284,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/BiodataForm.tsx",
-                lineNumber: 1221,
+                lineNumber: 1280,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/BiodataForm.tsx",
-        lineNumber: 852,
+        lineNumber: 911,
         columnNumber: 5
     }, this);
 }

@@ -818,19 +818,78 @@ export default function BiodataForm() {
         return;
       }
 
-      // Print only the preview card → Save as PDF = 100% same design
+      // Print the card ALONE inside a hidden iframe. The iframe document contains
+      // only the card, so the printout can never include the rest of the site
+      // (and nothing can repeat on extra pages).
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.style.cssText =
+        "position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;";
+      document.body.appendChild(iframe);
+      const idoc = iframe.contentDocument;
+      const iwin = iframe.contentWindow;
+      if (!idoc || !iwin) throw new Error("Print frame unavailable");
+
+      // Copy the app's stylesheets so the card looks identical
+      const styles = Array.from(
+        document.querySelectorAll('link[rel="stylesheet"], style')
+      )
+        .map((n) => n.outerHTML)
+        .join("\n");
+
+      idoc.open();
+      idoc.write(`<!DOCTYPE html>
+<html class="${document.documentElement.className}">
+<head>
+<meta charset="utf-8">
+<base href="${location.origin}/">
+${styles}
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  html, body {
+    margin: 0 !important; padding: 0 !important; background: #fff !important;
+    width: 210mm !important; height: 297mm !important; overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+  }
+  #biodata-preview-card, [data-biodata-preview] {
+    width: 210mm !important; max-width: 210mm !important; margin: 0 !important;
+    border-radius: 0 !important; box-shadow: none !important; border: 0 !important;
+    overflow: hidden !important; break-inside: avoid; position: relative !important;
+  }
+</style>
+</head>
+<body class="${document.body.className}">${card.outerHTML}</body>
+</html>`);
+      idoc.close();
+
+      // Wait for CSS, fonts and images inside the frame
+      await new Promise((r) => setTimeout(r, 300));
+      await Promise.all(
+        Array.from(idoc.images).map((img) =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise<void>((res) => {
+                img.onload = () => res();
+                img.onerror = () => res();
+              })
+        )
+      );
+      try {
+        await idoc.fonts?.ready;
+      } catch {
+        /* ignore */
+      }
+
       const cleanup = () => {
-        document.body.classList.remove("printing-biodata");
+        iframe.remove();
         setIsGenerating(false);
       };
-      document.body.classList.add("printing-biodata");
-      window.addEventListener("afterprint", cleanup, { once: true });
-      // Fallback if afterprint does not fire
-      setTimeout(cleanup, 2500);
-      window.print();
+      iwin.addEventListener("afterprint", cleanup, { once: true });
+      setTimeout(cleanup, 120000); // safety net only
+      iwin.focus();
+      iwin.print();
     } catch (err) {
       console.error(err);
-      document.body.classList.remove("printing-biodata");
       setError("PDF failed: " + (err instanceof Error ? err.message : "unknown"));
       setIsGenerating(false);
     }
