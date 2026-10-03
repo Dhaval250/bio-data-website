@@ -39,10 +39,10 @@ function SectionBar({
 function Line({ label, value }: { label: string; value?: string }) {
   if (!value || !String(value).trim()) return null;
   return (
-    <div className="grid grid-cols-[1fr_auto_1.2fr] gap-x-1 text-[11px] leading-[1.7] text-[#3f3a34]">
+    <div className="grid grid-cols-[minmax(0,42%)_8px_minmax(0,1fr)] gap-x-1 text-[11px] leading-[1.7] text-[#3f3a34]">
       <span className="text-[#5c564e]">{label}</span>
       <span className="text-[#9a9288]">:</span>
-      <span className="font-medium">{value}</span>
+      <span className="break-words font-medium">{value}</span>
     </div>
   );
 }
@@ -73,12 +73,12 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
       return (
         <div
           key={label}
-          className="grid grid-cols-[130px_10px_1fr] gap-x-1 text-[11.5px] leading-[1.75] sm:grid-cols-[148px_12px_1fr] sm:text-[12.5px]"
+          className="grid grid-cols-[minmax(0,40%)_8px_minmax(0,1fr)] gap-x-1 text-[11px] leading-[1.7] sm:grid-cols-[140px_12px_1fr] sm:text-[12.5px]"
           style={{ color: th.textColor }}
         >
           <span style={{ color: th.labelColor }}>{label}</span>
           <span style={{ opacity: 0.45 }}>:</span>
-          <span className="font-medium">{value}</span>
+          <span className="break-words font-medium">{value}</span>
         </div>
       );
     };
@@ -91,11 +91,9 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
         ref={ref}
         data-biodata-preview
         id="biodata-preview-card"
-        className="relative mx-auto w-full max-w-full sm:max-w-[440px] overflow-hidden rounded-sm shadow-xl sm:max-w-full sm:max-w-[520px]"
+        className="relative mx-auto w-full max-w-[100%] overflow-hidden rounded-lg shadow-xl sm:max-w-[480px] sm:rounded-sm"
         style={{
           fontFamily: "Georgia, 'Times New Roman', serif",
-          aspectRatio: "210 / 297",
-          minHeight: "640px",
           background: th.pageBg,
         }}
       >

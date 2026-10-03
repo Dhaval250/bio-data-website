@@ -59,14 +59,7 @@ export const TEMPLATES: Template[] = [
 ];
 
 export function templateImageSrc(id: string): string {
-  const webpIds = [
-    "abstract-orange",
-    "abstract-lotus",
-    "abstract-red-velvet",
-    "abstract-rose",
-    "abstract-blue",
-  ];
-  if (webpIds.includes(id)) return `/templates/${id}.webp`;
+  // All previews as PNG so every browser shows full image
   return `/templates/${id}.png`;
 }
 

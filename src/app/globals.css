@@ -147,3 +147,23 @@ input, select, textarea {
     box-sizing: border-box !important;
   }
 }
+
+/* Premium mobile form */
+@media (max-width: 640px) {
+  .card-elevated {
+    border-radius: 1.25rem;
+    box-shadow:
+      0 1px 2px rgb(12 10 9 / 0.05),
+      0 16px 48px rgb(12 10 9 / 0.08);
+  }
+  /* Comfortable tap targets */
+  input[type="checkbox"] {
+    min-width: 1.125rem;
+    min-height: 1.125rem;
+  }
+}
+
+/* Template preview images — full image inside card */
+img.h-full.w-full.object-contain.object-center.transition.duration-300.group-hover\:scale-\[1\.02\] {
+  max-height: 100%;
+}

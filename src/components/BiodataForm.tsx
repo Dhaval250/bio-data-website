@@ -51,7 +51,49 @@ const OPTIONAL_CHIPS = [
 ] as const;
 
 const fieldClass =
-  "w-full min-h-[44px] rounded-xl border border-[#e7e5e4] bg-white px-3.5 py-2.5 text-base text-[#1c1917] shadow-sm outline-none transition placeholder:text-[#78716c]/60 focus:border-[#c4a35a] focus:ring-2 focus:ring-[#c4a35a]/25 sm:text-sm touch-manipulation";
+  "w-full min-h-[48px] rounded-2xl border border-[#e8e0d4] bg-white px-4 py-3 text-base text-[#1c1917] shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none transition placeholder:text-[#a8a29e] focus:border-[#c4a35a] focus:shadow-[0_0_0_3px_rgba(196,163,90,0.18)] sm:min-h-[44px] sm:text-sm touch-manipulation";
+
+const SESSION_KEY = "fbm-biodata-session-v1";
+
+type SessionSnapshot = {
+  data: BiodataFormData;
+  step: number;
+  personalFields: FormFieldRow[];
+  familyFields: FormFieldRow[];
+  contactFields: FormFieldRow[];
+  showPreview: boolean;
+};
+
+function loadSession(): SessionSnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SessionSnapshot;
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(snap: SessionSnapshot) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(snap));
+  } catch {
+    // quota / private mode — ignore
+  }
+}
+
+function clearSession() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 function makeId() {
   return `f-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -137,6 +179,16 @@ function looksLatin(text: string): boolean {
   return /[A-Za-z]{2,}/.test(text);
 }
 
+/** Detect script to pick API source language */
+function detectScriptLang(text: string, fallback: Language = "en"): Language {
+  if (/[\u0A80-\u0AFF]/.test(text)) return "gu"; // Gujarati
+  if (/[\u0900-\u097F]/.test(text)) return "hi"; // Devanagari (hi/mr)
+  if (/[\u0C00-\u0C7F]/.test(text)) return "te"; // Telugu
+  if (/[\u0980-\u09FF]/.test(text)) return "bn"; // Bengali
+  if (looksLatin(text)) return "en";
+  return fallback;
+}
+
 /** Field row: label + Include + input + up/down — aligned like original */
 function FieldRow({
   field,
@@ -191,18 +243,18 @@ function FieldRow({
     }
   };
 
-  const btnMove =
-    "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#c4a35a] text-white shadow-sm transition hover:bg-[#9a7b3c] disabled:opacity-30 touch-manipulation sm:h-8 sm:w-8";
+  const btnIcon =
+    "inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#e8e0d4] bg-[#faf8f5] text-[#9a7b3c] transition active:scale-95 disabled:opacity-25 touch-manipulation";
 
   return (
-    <div className="rounded-xl border border-[#e7e5e4] bg-white p-3 shadow-sm sm:p-3.5">
+    <div className="rounded-2xl border border-[#ebe4d8] bg-white p-3 shadow-[0_2px_8px_rgba(28,25,23,0.04)] sm:p-4">
       {/* Label + Include */}
       <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+        <div className="flex min-w-0 flex-1 items-center gap-1">
           {editingLabel ? (
             <input
               autoFocus
-              className="min-w-0 flex-1 rounded-lg border border-[#c4a35a] bg-white px-2 py-1.5 text-base font-semibold text-stone-800 outline-none focus:ring-2 focus:ring-[#e7e5e4] sm:text-sm"
+              className="min-w-0 flex-1 rounded-lg border border-[#c4a35a] bg-white px-2 py-1.5 text-base font-semibold text-stone-800 outline-none focus:ring-2 focus:ring-[#c4a35a]/20 sm:text-sm"
               value={field.label}
               onChange={(e) => onChange(field.id, { label: e.target.value })}
               onBlur={() => setEditingLabel(false)}
@@ -210,15 +262,17 @@ function FieldRow({
             />
           ) : (
             <>
-              <span className="truncate text-sm font-semibold text-stone-700">
+              <span className="truncate text-[13px] font-semibold text-stone-700 sm:text-sm">
                 {field.label}
-                {field.required && <span className="text-[#c4a35a]"> *</span>}
+                {(field.required || field.key === "fullName") && (
+                  <span className="text-[#c4a35a]"> *</span>
+                )}
               </span>
               <button
                 type="button"
                 title="Edit label"
                 onClick={() => setEditingLabel(true)}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-stone-400 touch-manipulation hover:bg-[#faf6eb] hover:text-[#c4a35a]"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-stone-400 touch-manipulation hover:bg-[#faf6eb] hover:text-[#c4a35a]"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -230,23 +284,24 @@ function FieldRow({
             </>
           )}
         </div>
-        <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-xs font-medium text-[#9a7b3c] touch-manipulation">
+        <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-[11px] font-medium text-[#9a7b3c] touch-manipulation sm:text-xs">
           <input
             type="checkbox"
             checked={field.include}
             onChange={(e) => onChange(field.id, { include: e.target.checked })}
             className="h-4 w-4 rounded border-[#c4a35a] text-[#c4a35a] focus:ring-[#c4a35a]"
           />
-          <span className="hidden xs:inline sm:inline">{includeText}</span>
+          <span>Include</span>
         </label>
       </div>
 
-      {/* Input — full width, never squeezed by side buttons */}
+      {/* Input — always full width on mobile */}
       <div className="w-full min-w-0">
         {field.type === "select" ? (
           <select
             className={fieldClass}
             value={field.value}
+            data-field-key={field.key}
             onChange={(e) => onChange(field.id, { value: e.target.value })}
           >
             <option value="">{selectText}</option>
@@ -277,24 +332,26 @@ function FieldRow({
             type={field.type === "date" ? "date" : "text"}
             className={fieldClass}
             value={field.value}
+            data-field-key={field.key}
             onChange={(e) => onChange(field.id, { value: e.target.value })}
             onBlur={() => void tryAutoTranslate()}
             placeholder={field.placeholder}
+            autoComplete={field.key === "fullName" ? "name" : "off"}
           />
         )}
       </div>
 
-      {/* Actions under input — roomy on mobile, compact on desktop */}
+      {/* Compact actions — right aligned, small pills (mobile friendly) */}
       <div className="mt-2 flex items-center justify-end gap-1.5">
         <button
           type="button"
           disabled={isFirst}
           onClick={() => onMove(field.id, -1)}
-          className={btnMove}
+          className={btnIcon}
           title="Move up"
           aria-label="Move field up"
         >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M5 12l5-5 5 5H5z" />
           </svg>
         </button>
@@ -302,11 +359,11 @@ function FieldRow({
           type="button"
           disabled={isLast}
           onClick={() => onMove(field.id, 1)}
-          className={btnMove}
+          className={btnIcon}
           title="Move down"
           aria-label="Move field down"
         >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
             <path d="M5 8l5 5 5-5H5z" />
           </svg>
         </button>
@@ -314,11 +371,13 @@ function FieldRow({
           <button
             type="button"
             onClick={() => onRemove(field.id)}
-            className="inline-flex h-10 min-w-[40px] items-center justify-center rounded-lg px-2 text-sm font-medium text-red-600 touch-manipulation hover:bg-red-50 sm:h-8"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 active:scale-95 touch-manipulation"
             title="Remove field"
             aria-label="Remove field"
           >
-            ✕
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         )}
       </div>
@@ -327,6 +386,7 @@ function FieldRow({
 }
 
 export default function BiodataForm() {
+  // sessionStorage keeps data across steps; auto-clears when tab/window closes
   const [data, setData] = useState<BiodataFormData>(initialData);
   const [step, setStep] = useState(0);
   const [personalFields, setPersonalFields] = useState<FormFieldRow[]>(defaultPersonalFields);
@@ -336,7 +396,35 @@ export default function BiodataForm() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState("");
+  const [hydrated, setHydrated] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Client hydrate (avoid SSR mismatch)
+  useEffect(() => {
+    const s = loadSession();
+    if (s) {
+      if (s.data) setData(s.data);
+      if (typeof s.step === "number") setStep(s.step);
+      if (s.personalFields?.length) setPersonalFields(s.personalFields);
+      if (s.familyFields?.length) setFamilyFields(s.familyFields);
+      if (s.contactFields?.length) setContactFields(s.contactFields);
+      if (typeof s.showPreview === "boolean") setShowPreview(s.showPreview);
+    }
+    setHydrated(true);
+  }, []);
+
+  // Persist all form + steps to sessionStorage on every change
+  useEffect(() => {
+    if (!hydrated) return;
+    saveSession({
+      data,
+      step,
+      personalFields,
+      familyFields,
+      contactFields,
+      showPreview,
+    });
+  }, [hydrated, data, step, personalFields, familyFields, contactFields, showPreview]);
 
   const update = useCallback(
     <K extends keyof BiodataFormData>(key: K, value: BiodataFormData[K]) => {
@@ -365,33 +453,45 @@ export default function BiodataForm() {
     });
   }, []);
 
-  /** Translate one field value via API (English → selected language) */
-  const translateText = useCallback(async (text: string, to: Language) => {
-    if (!text.trim() || to === "en" || !looksLatin(text)) return text;
-    try {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, from: "en", to }),
-      });
-      const data = await res.json();
-      return String(data?.translated || text).trim() || text;
-    } catch {
-      return text;
-    }
-  }, []);
+  /** Translate field value between languages via API */
+  const translateText = useCallback(
+    async (text: string, to: Language, fromLang?: Language) => {
+      const value = (text || "").trim();
+      if (!value) return text;
+      if (to === fromLang) return text;
+      // Skip pure numbers / dates / phones
+      if (/^[\d\s+\-/.()]+$/.test(value)) return text;
+
+      const from = fromLang || detectScriptLang(value, "en");
+      if (from === to) return text;
+
+      try {
+        const res = await fetch("/api/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: value, from, to }),
+        });
+        const data = await res.json();
+        const translated = String(data?.translated || "").trim();
+        return translated || text;
+      } catch {
+        return text;
+      }
+    },
+    []
+  );
 
   const translateFieldList = useCallback(
-    async (list: FormFieldRow[], to: Language) => {
-      if (to === "en") return applyLangToFields(list, to);
+    async (list: FormFieldRow[], to: Language, fromLang: Language) => {
       const next = await Promise.all(
         list.map(async (f) => {
           const labeled = applyLangToFields([f], to)[0];
           if (SKIP_TRANSLATE_KEYS.has(f.key) || f.type === "date" || f.type === "select") {
             return labeled;
           }
-          if (!f.value?.trim() || !looksLatin(f.value)) return labeled;
-          const translated = await translateText(f.value, to);
+          const v = (f.value || "").trim();
+          if (!v) return labeled;
+          const translated = await translateText(v, to, fromLang);
           return { ...labeled, value: translated };
         })
       );
@@ -402,25 +502,70 @@ export default function BiodataForm() {
 
   const setLanguage = useCallback(
     (next: Language) => {
-      setData((prev) => ({ ...prev, language: next }));
-      // Labels first, then translate English-typed values → selected language
+      const fromLang = (data.language as Language) || "en";
+      if (fromLang === next) return;
+
+      // Labels now + translate VALUES in background
       setPersonalFields((prev) => {
-        const labeled = applyLangToFields(prev, next);
-        void translateFieldList(prev, next).then(setPersonalFields);
-        return labeled;
+        void translateFieldList(prev, next, fromLang).then(setPersonalFields);
+        return applyLangToFields(prev, next);
       });
       setFamilyFields((prev) => {
-        const labeled = applyLangToFields(prev, next);
-        void translateFieldList(prev, next).then(setFamilyFields);
-        return labeled;
+        void translateFieldList(prev, next, fromLang).then(setFamilyFields);
+        return applyLangToFields(prev, next);
       });
       setContactFields((prev) => {
-        const labeled = applyLangToFields(prev, next);
-        void translateFieldList(prev, next).then(setContactFields);
-        return labeled;
+        void translateFieldList(prev, next, fromLang).then(setContactFields);
+        return applyLangToFields(prev, next);
+      });
+
+      // 3) Title + Mantra
+      setData((prev) => {
+        const defaultEnTitle = "Biodata";
+        const defaultEnMantra = "|| Shri Ganeshaya Namah ||";
+        const nextDefaultTitle = t(next, "defaultTitle") || defaultEnTitle;
+        const nextDefaultMantra = t(next, "defaultMantra") || defaultEnMantra;
+        const prevDefaultTitle =
+          t(fromLang, "defaultTitle") || defaultEnTitle;
+        const prevDefaultMantra =
+          t(fromLang, "defaultMantra") || defaultEnMantra;
+
+        let title = prev.biodataTitle || defaultEnTitle;
+        let mantra = prev.mantra || defaultEnMantra;
+
+        const isDefaultTitle =
+          !title.trim() ||
+          title.trim() === defaultEnTitle ||
+          title.trim() === prevDefaultTitle;
+        const isDefaultMantra =
+          !mantra.trim() ||
+          mantra.trim() === defaultEnMantra ||
+          mantra.trim() === prevDefaultMantra;
+
+        if (isDefaultTitle) {
+          title = nextDefaultTitle;
+        } else {
+          void translateText(title, next, fromLang).then((tr) => {
+            if (tr) setData((p) => ({ ...p, biodataTitle: tr }));
+          });
+        }
+        if (isDefaultMantra) {
+          mantra = nextDefaultMantra;
+        } else {
+          void translateText(mantra, next, fromLang).then((tr) => {
+            if (tr) setData((p) => ({ ...p, mantra: tr }));
+          });
+        }
+
+        return {
+          ...prev,
+          language: next,
+          biodataTitle: title,
+          mantra,
+        };
       });
     },
-    [applyLangToFields, translateFieldList]
+    [applyLangToFields, translateFieldList, translateText, data.language]
   );
 
   // Keep labels in sync on first mount for default language
@@ -549,16 +694,58 @@ export default function BiodataForm() {
 
   const next = () => {
     setError("");
-    const name = personalFields.find((f) => f.key === "fullName")?.value?.trim();
-    if (step === 0 && !name) {
-      setError(t(data.language as Language, "nameRequired"));
+
+    // Current step fields that are included must be filled before Next
+    const sectionFields =
+      step === 0 ? personalFields : step === 1 ? familyFields : contactFields;
+
+    const missing = sectionFields.filter(
+      (f) => f.include && !(f.value || "").trim()
+    );
+
+    if (missing.length > 0) {
+      const names = missing.map((f) => f.label).slice(0, 4).join(", ");
+      const more = missing.length > 4 ? ` +${missing.length - 4} more` : "";
+      setError(
+        `Please fill all fields before Next Step: ${names}${more}`
+      );
+      // Focus first empty included field
+      try {
+        const key = missing[0]?.key;
+        if (key) {
+          const el = document.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+            `[data-field-key="${key}"]`
+          );
+          el?.focus();
+        }
+      } catch {
+        /* ignore */
+      }
       return;
     }
-    if (step < 2) setStep(step + 1);
-    else {
-      setData(buildDataFromFields());
-      setShowPreview(true);
+
+    // Sync full name into data
+    if (step === 0) {
+      const name =
+        personalFields.find((f) => f.key === "fullName")?.value?.trim() ||
+        data.fullName;
+      if (name) setData((prev) => ({ ...prev, fullName: name }));
     }
+
+    // Save snapshot into main data, then advance
+    setData(buildDataFromFields());
+
+    if (step < 2) {
+      setStep(step + 1);
+      // Scroll to top of form on step change
+      try {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+    setShowPreview(true);
   };
 
   const prev = () => {
@@ -867,13 +1054,6 @@ export default function BiodataForm() {
                 {t(lang, "goBack")}
               </button>
               <div className="order-1 flex w-full flex-col gap-2 sm:order-2 sm:w-auto sm:flex-row sm:flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => addField(currentSection)}
-                  className="min-h-[44px] w-full rounded-xl border border-[#c4a35a] bg-white px-4 py-2.5 text-sm font-semibold text-[#9a7b3c] touch-manipulation hover:bg-[#faf6eb] sm:w-auto"
-                >
-                  {t(lang, "customField")}
-                </button>
                 <button
                   type="button"
                   onClick={next}
