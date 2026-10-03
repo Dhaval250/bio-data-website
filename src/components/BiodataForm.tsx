@@ -402,15 +402,54 @@ export default function BiodataForm() {
   // Client hydrate (avoid SSR mismatch)
   useEffect(() => {
     const s = loadSession();
+    let preferred: string | null = null;
+    try {
+      preferred = sessionStorage.getItem("fbm-preferred-template");
+    } catch {
+      preferred = null;
+    }
     if (s) {
-      if (s.data) setData(s.data);
+      if (s.data) {
+        setData({
+          ...s.data,
+          templateId: preferred || s.data.templateId || "abstract-orange",
+        });
+      } else if (preferred) {
+        setData((prev) => ({ ...prev, templateId: preferred! }));
+      }
       if (typeof s.step === "number") setStep(s.step);
       if (s.personalFields?.length) setPersonalFields(s.personalFields);
       if (s.familyFields?.length) setFamilyFields(s.familyFields);
       if (s.contactFields?.length) setContactFields(s.contactFields);
       if (typeof s.showPreview === "boolean") setShowPreview(s.showPreview);
+    } else if (preferred) {
+      setData((prev) => ({ ...prev, templateId: preferred! }));
     }
     setHydrated(true);
+  }, []);
+
+  // Homepage "Choose Your Perfect Template" → apply selection live
+  useEffect(() => {
+    const onPick = (e: Event) => {
+      const ce = e as CustomEvent<{ templateId?: string }>;
+      const id = ce?.detail?.templateId;
+      if (!id) return;
+      setData((prev) => ({ ...prev, templateId: id }));
+      setShowPreview(false);
+      try {
+        sessionStorage.setItem("fbm-preferred-template", id);
+      } catch {
+        /* ignore */
+      }
+      // Jump to form create section
+      try {
+        document.getElementById("create")?.scrollIntoView({ behavior: "smooth" });
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("fbm-template-select", onPick as EventListener);
+    return () => window.removeEventListener("fbm-template-select", onPick as EventListener);
   }, []);
 
   // Persist all form + steps to sessionStorage on every change
@@ -807,7 +846,8 @@ export default function BiodataForm() {
 
   const previewData = useMemo(() => {
     if (!showPreview) return data;
-    return buildDataFromFields();
+    // Always keep the user-selected template
+    return { ...buildDataFromFields(), templateId: data.templateId };
   }, [showPreview, data, buildDataFromFields]);
 
   return (
@@ -1032,10 +1072,40 @@ export default function BiodataForm() {
             </div>
 
             {step === 2 && (
-              <div className="mt-6">
+              <div id="form-template-pick" className="mt-8 scroll-mt-24">
                 <TemplateSelector
                   selectedId={data.templateId}
-                  onSelect={(id) => update("templateId", id)}
+                  onSelect={(id) => {
+                    try {
+                      sessionStorage.setItem("fbm-preferred-template", id);
+                    } catch {
+                      /* ignore */
+                    }
+
+                    // Validate contact fields before opening preview
+                    const missing = contactFields.filter(
+                      (f) => f.include && !(f.value || "").trim()
+                    );
+                    if (missing.length > 0) {
+                      update("templateId", id);
+                      const names = missing.map((f) => f.label).slice(0, 4).join(", ");
+                      setError(
+                        `Template selected. Please fill: ${names} — then Preview.`
+                      );
+                      return;
+                    }
+
+                    // Apply selected template + open preview with that design
+                    const built = { ...buildDataFromFields(), templateId: id };
+                    setData(built);
+                    setError("");
+                    setShowPreview(true);
+                    try {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    } catch {
+                      /* ignore */
+                    }
+                  }}
                 />
               </div>
             )}
@@ -1114,7 +1184,7 @@ export default function BiodataForm() {
 
             <div className="mt-5 space-y-3">
               <a
-                href="mailto:manikbiradar365@gmail.com"
+                href="mailto:Pankajahir526@gmail.com"
                 className="flex items-center gap-4 rounded-xl border border-[#f0e6c8] bg-white px-4 py-3.5 shadow-sm transition hover:border-[#e67e22]/40 hover:shadow-md"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fff3e0] text-xl">
@@ -1123,13 +1193,13 @@ export default function BiodataForm() {
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-500">Email Support:</p>
                   <p className="truncate text-sm font-semibold text-[#e67e22] sm:text-base">
-                    manikbiradar365@gmail.com
+                    Pankajahir526@gmail.com
                   </p>
                 </div>
               </a>
 
               <a
-                href="https://wa.me/919998667073"
+                href="https://wa.me/919773424517"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 rounded-xl border border-[#f0e6c8] bg-white px-4 py-3.5 shadow-sm transition hover:border-[#25d366]/50 hover:shadow-md"
@@ -1140,7 +1210,7 @@ export default function BiodataForm() {
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-500">WhatsApp Support:</p>
                   <p className="text-sm font-semibold text-[#25d366] sm:text-base">
-                    +919998667073
+                    +91 9773424517
                   </p>
                 </div>
               </a>

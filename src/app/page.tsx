@@ -269,17 +269,24 @@ export default function Home() {
       </section>
 
       {/* Templates */}
-      <section id="templates" className="w-full scroll-mt-14 bg-[#f0ebe3]/40 py-12 sm:py-16">
+      <section id="templates" className="w-full scroll-mt-14 bg-gradient-to-b from-[#faf6eb] via-[#f0ebe3]/50 to-white py-16 sm:py-20">
         <div className={shell}>
-          <h2 className="text-center text-xl font-bold text-[#1c1917] sm:text-2xl">Choose Your Perfect Template</h2>
-          <p className="mt-1 text-center text-sm text-[#78716c]">Select from our collection of professionally designed biodata templates.</p>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c4a35a]">Templates</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#1c1917] sm:text-3xl lg:text-4xl">
+              Choose Your Perfect Template
+            </h2>
+            <p className="mt-3 text-sm text-[#78716c] sm:text-base">
+              Browse full designs below. Click any template to start the form — you can change it again at the bottom after filling your details.
+            </p>
+          </div>
           <TemplateGallery />
-          <div className="mt-8 text-center">
+          <div className="mt-10 text-center">
             <a
               href="#create"
-              className="inline-flex rounded-full bg-[#1c1917] px-6 py-2.5 text-sm font-semibold text-[#e8d5a3] transition hover:bg-[#2a2438]"
+              className="inline-flex items-center gap-2 rounded-full bg-[#1c1917] px-8 py-3 text-sm font-semibold text-[#e8d5a3] shadow-lg transition hover:bg-[#2a2438]"
             >
-              View All Templates →
+              Fill form &amp; select template →
             </a>
           </div>
         </div>
@@ -389,7 +396,7 @@ export default function Home() {
             </p>
             <div className="mt-5 space-y-3">
               <a
-                href="mailto:manikbiradar365@gmail.com"
+                href="mailto:Pankajahir526@gmail.com"
                 className="flex items-center gap-4 rounded-xl border border-[#f0e6c8] bg-white px-4 py-3.5 shadow-sm transition hover:border-[#e67e22]/40 hover:shadow-md"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fff3e0] text-xl">
@@ -398,12 +405,12 @@ export default function Home() {
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-500">Email Support:</p>
                   <p className="truncate text-sm font-semibold text-[#e67e22] sm:text-base">
-                    manikbiradar365@gmail.com
+                    Pankajahir526@gmail.com
                   </p>
                 </div>
               </a>
               <a
-                href="https://wa.me/919998667073"
+                href="https://wa.me/919773424517"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 rounded-xl border border-[#f0e6c8] bg-white px-4 py-3.5 shadow-sm transition hover:border-[#25d366]/50 hover:shadow-md"
@@ -414,7 +421,7 @@ export default function Home() {
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-500">WhatsApp Support:</p>
                   <p className="text-sm font-semibold text-[#25d366] sm:text-base">
-                    +919998667073
+                    +91 9773424517
                   </p>
                 </div>
               </a>
@@ -509,13 +516,13 @@ export default function Home() {
             <p className="text-sm font-semibold text-[#c4a35a]">Support</p>
             <ul className="mt-2 space-y-1 text-sm text-white/60">
               <li>
-                <a href="mailto:manikbiradar365@gmail.com" className="hover:text-[#c4a35a]">
+                <a href="mailto:Pankajahir526@gmail.com" className="hover:text-[#c4a35a]">
                   Email
                 </a>
               </li>
               <li>
                 <a
-                  href="https://wa.me/919998667073"
+                  href="https://wa.me/919773424517"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[#c4a35a]"
