@@ -3,8 +3,8 @@
 
 __turbopack_context__.v((parentImport) => {
     return Promise.all([
-  "static/chunks/node_modules_1_x2ati._.js",
-  "static/chunks/src_lib_capturePreviewPdf_ts_1kosjm3._.js"
+  "static/chunks/node_modules_jspdf_dist_jspdf_es_min_11xcnru.js",
+  "static/chunks/_0j45spu._.js"
 ].map((chunk) => __turbopack_context__.l(chunk))).then(() => {
         return parentImport("[project]/src/lib/capturePreviewPdf.ts [app-client] (ecmascript)");
     });

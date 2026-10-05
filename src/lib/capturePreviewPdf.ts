@@ -1,8 +1,14 @@
 /**
- * Preview → PDF without Tailwind lab() crash.
- * Strategy: build an iframe with ZERO stylesheets, paste a clone
- * that only has inline RGB styles from getComputedStyle (resolved).
+ * Preview card -> real PDF file, downloaded directly (no print dialog).
+ *
+ * Rendering is done by `html-to-image` (SVG <foreignObject>), i.e. by the
+ * browser's OWN layout/text engine. That keeps line breaks, letter spacing and
+ * fonts identical to the preview. (html2canvas re-implements text drawing and
+ * produced wrapped, overlapping labels on mobile.)
+ *
+ * Needs:  npm i html-to-image
  */
+import { toCanvas } from "html-to-image";
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -15,23 +21,9 @@ function loadScript(src: string): Promise<void> {
     s.async = true;
     s.dataset.pdfLib = src;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error(`Failed ${src}`));
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
     document.head.appendChild(s);
   });
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getHtml2Canvas(): Promise<any> {
-  try {
-    const mod = await import("html2canvas");
-    return mod.default;
-  } catch {
-    await loadScript("/vendor/html2canvas.min.js");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fn = (window as any).html2canvas;
-    if (!fn) throw new Error("html2canvas missing");
-    return fn;
-  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,230 +36,50 @@ async function getJsPDF(): Promise<any> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
     const JsPDF = w.jspdf?.jsPDF || w.jsPDF;
-    if (!JsPDF) throw new Error("jspdf missing");
+    if (!JsPDF) throw new Error("jsPDF missing");
     return JsPDF;
   }
 }
 
-function isBad(v: string): boolean {
-  return /lab\(|oklch\(|oklab\(|lch\(|color\(/.test(v);
+function isSafari(): boolean {
+  const ua = navigator.userAgent;
+  return /safari/i.test(ua) && !/chrome|chromium|crios|fxios|android/i.test(ua);
 }
 
-function toSafeColor(value: string, ctx: CanvasRenderingContext2D): string {
-  if (!value || value === "transparent") return "rgba(0,0,0,0)";
-  if (!isBad(value) && (value.startsWith("#") || value.startsWith("rgb"))) {
-    return value;
-  }
-  try {
-    ctx.fillStyle = "#000";
-    ctx.fillStyle = value;
-    const r = String(ctx.fillStyle);
-    if (r.startsWith("#") || r.startsWith("rgb")) return r;
-  } catch {
-    /* ignore */
-  }
-  // Fallbacks for biodata palette
-  if (value.includes("250") || value.includes("faf")) return "#faf8f5";
-  return "#2c2825";
-}
+/** Fixed render width (CSS px). Layout uses cqw units, so any width gives the same design,
+ *  but a big width means normal-sized fonts (no tiny 8px text on phones) -> sharp output. */
+const RENDER_W = 1050;
 
-/** Copy resolved visual styles from live node → target as inline only */
-function inlineComputedTree(
-  source: HTMLElement,
-  target: HTMLElement,
-  ctx: CanvasRenderingContext2D
-) {
-  const cs = window.getComputedStyle(source);
+/** Off-screen full-size copy of the card, unaffected by the phone's screen width. */
+function makeOffscreenClone(element: HTMLElement): { host: HTMLElement; node: HTMLElement } {
+  const host = document.createElement("div");
+  host.setAttribute("aria-hidden", "true");
+  host.style.cssText =
+    `position:fixed;left:-20000px;top:0;width:${RENDER_W}px;pointer-events:none;` +
+    "-webkit-text-size-adjust:100%;text-size-adjust:100%;";
 
-  // Comprehensive visual props (no lab after resolve in modern browsers)
-  const props = [
-    "display",
-    "position",
-    "boxSizing",
-    "width",
-    "height",
-    "maxWidth",
-    "maxHeight",
-    "minWidth",
-    "minHeight",
-    "marginTop",
-    "marginRight",
-    "marginBottom",
-    "marginLeft",
-    "paddingTop",
-    "paddingRight",
-    "paddingBottom",
-    "paddingLeft",
-    "fontFamily",
-    "fontSize",
-    "fontWeight",
-    "fontStyle",
-    "lineHeight",
-    "letterSpacing",
-    "textAlign",
-    "textDecoration",
-    "textTransform",
-    "whiteSpace",
-    "overflow",
-    "overflowX",
-    "overflowY",
-    "verticalAlign",
-    "opacity",
-    "visibility",
-    "borderTopWidth",
-    "borderRightWidth",
-    "borderBottomWidth",
-    "borderLeftWidth",
-    "borderTopStyle",
-    "borderRightStyle",
-    "borderBottomStyle",
-    "borderLeftStyle",
-    "borderTopLeftRadius",
-    "borderTopRightRadius",
-    "borderBottomRightRadius",
-    "borderBottomLeftRadius",
-    "flexDirection",
-    "flexWrap",
-    "justifyContent",
-    "alignItems",
-    "alignContent",
-    "alignSelf",
-    "flex",
-    "flexGrow",
-    "flexShrink",
-    "flexBasis",
-    "gap",
-    "rowGap",
-    "columnGap",
-    "gridTemplateColumns",
-    "gridTemplateRows",
-    "gridColumn",
-    "gridRow",
-    "objectFit",
-    "objectPosition",
-    "zIndex",
-    "top",
-    "right",
-    "bottom",
-    "left",
-    "transform",
-    "transformOrigin",
-  ];
-
-  for (const p of props) {
-    try {
-      const val = cs.getPropertyValue(
-        p.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())
-      );
-      if (val) {
-        target.style.setProperty(
-          p.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase()),
-          val
-        );
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-
-  // Colors — force safe
-  const colorProps = [
-    "color",
-    "background-color",
-    "border-top-color",
-    "border-right-color",
-    "border-bottom-color",
-    "border-left-color",
-    "outline-color",
-    "text-decoration-color",
-  ];
-  for (const p of colorProps) {
-    const raw = cs.getPropertyValue(p);
-    target.style.setProperty(p, toSafeColor(raw || "#2c2825", ctx), "important");
-  }
-
-  // background-image often none; skip gradients with lab
-  const bgImage = cs.backgroundImage;
-  if (!bgImage || bgImage === "none" || isBad(bgImage)) {
-    target.style.setProperty("background-image", "none", "important");
-  }
-
-  target.style.setProperty("box-shadow", "none", "important");
-  target.style.setProperty("text-shadow", "none", "important");
-  target.style.setProperty("filter", "none", "important");
-
-  // Children
-  const srcChildren = Array.from(source.children);
-  const dstChildren = Array.from(target.children);
-  for (let i = 0; i < srcChildren.length; i++) {
-    const s = srcChildren[i];
-    const d = dstChildren[i];
-    if (s instanceof HTMLElement && d instanceof HTMLElement) {
-      inlineComputedTree(s, d, ctx);
-    }
-  }
-}
-
-function buildSafeClone(element: HTMLElement): {
-  host: HTMLIFrameElement;
-  clone: HTMLElement;
-  width: number;
-  height: number;
-} {
-  const rect = element.getBoundingClientRect();
-  const width = Math.max(1, Math.ceil(element.scrollWidth || rect.width));
-  const height = Math.max(1, Math.ceil(element.scrollHeight || rect.height));
-
-  const iframe = document.createElement("iframe");
-  iframe.style.cssText = `position:fixed;left:-10000px;top:0;width:${width}px;height:${height}px;border:0;opacity:0;pointer-events:none;`;
-  document.body.appendChild(iframe);
-
-  const idoc = iframe.contentDocument!;
-  idoc.open();
-  idoc.write(
-    `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#faf8f5;"></body></html>`
-  );
-  idoc.close();
-
-  const clone = element.cloneNode(true) as HTMLElement;
-
-  // Sync images
-  const srcImgs = element.querySelectorAll("img");
-  const dstImgs = clone.querySelectorAll("img");
-  srcImgs.forEach((src, i) => {
-    if (dstImgs[i] && src.src) {
-      dstImgs[i].src = src.src;
-      dstImgs[i].style.objectFit = "cover";
-    }
+  const node = element.cloneNode(true) as HTMLElement;
+  node.removeAttribute("id");
+  node.style.setProperty("width", `${RENDER_W}px`, "important");
+  node.style.setProperty("max-width", "none", "important");
+  node.style.setProperty("min-width", "0", "important");
+  node.style.setProperty("margin", "0", "important");
+  node.style.setProperty("border-radius", "0", "important");
+  node.style.setProperty("box-shadow", "none", "important");
+  node.style.setProperty("transform", "none", "important");
+  node.querySelectorAll("img").forEach((img) => {
+    img.loading = "eager";
+    img.decoding = "sync";
   });
 
-  const ctx = document.createElement("canvas").getContext("2d")!;
-  inlineComputedTree(element, clone, ctx);
-
-  clone.style.width = `${width}px`;
-  clone.style.height = `${height}px`;
-  clone.style.margin = "0";
-  clone.style.maxWidth = "none";
-  clone.style.boxShadow = "none";
-  clone.style.backgroundColor = "#faf8f5";
-
-  idoc.body.appendChild(clone);
-
-  return { host: iframe, clone, width, height };
+  host.appendChild(node);
+  document.body.appendChild(host);
+  return { host, node };
 }
 
-export async function captureElementToPdf(
-  element: HTMLElement,
-  fileName: string
-): Promise<void> {
-  const html2canvas = await getHtml2Canvas();
-  const JsPDF = await getJsPDF();
-
-  await document.fonts?.ready?.catch?.(() => undefined);
-
-  const imgs = Array.from(element.querySelectorAll("img"));
+async function waitForImages(root: HTMLElement) {
   await Promise.all(
-    imgs.map((img) =>
+    Array.from(root.querySelectorAll("img")).map((img) =>
       img.complete && img.naturalHeight > 0
         ? Promise.resolve()
         : new Promise<void>((res) => {
@@ -276,42 +88,86 @@ export async function captureElementToPdf(
           })
     )
   );
+}
 
-  const { host, clone, width, height } = buildSafeClone(element);
+export async function captureElementToPdf(
+  element: HTMLElement,
+  fileName: string
+): Promise<void> {
+  const JsPDF = await getJsPDF();
 
   try {
-    // Wait layout in iframe
-    await new Promise((r) => setTimeout(r, 50));
+    await document.fonts?.ready;
+  } catch {
+    /* ignore */
+  }
 
-    const canvas = await html2canvas(clone, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#faf8f5",
-      logging: false,
-      width,
-      height,
-      windowWidth: width,
-      windowHeight: height,
-      scrollX: 0,
-      scrollY: 0,
+  const { host, node } = makeOffscreenClone(element);
+  let canvas: HTMLCanvasElement;
+  try {
+    await waitForImages(node);
+    // let the clone lay out (fit-to-page scaling inside the card re-measures on resize)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+    await new Promise((r) => setTimeout(r, 150));
+
+    const makeOptions = (pixelRatio: number) => ({
+      pixelRatio,
+      backgroundColor: "#ffffff",
+      cacheBust: false,
     });
 
-    const imgData = canvas.toDataURL("image/jpeg", 0.97);
-    const pdf = new JsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-      compress: true,
-    });
-
-    pdf.setFillColor(250, 248, 245);
-    pdf.rect(0, 0, 210, 297, "F");
-    pdf.addImage(imgData, "JPEG", 0, 0, 210, 297, undefined, "FAST");
-
-    const name = fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`;
-    pdf.save(name);
+    // 2x of 1050px = 2100px wide (~254dpi on A4). Fall back to lower ratios on weak devices.
+    const ratios = [2, 1.5, 1];
+    let lastErr: unknown;
+    canvas = undefined as unknown as HTMLCanvasElement;
+    for (const ratio of ratios) {
+      try {
+        if (isSafari()) {
+          try {
+            await toCanvas(node, makeOptions(ratio)); // Safari warm-up render
+          } catch {
+            /* ignore */
+          }
+        }
+        canvas = await toCanvas(node, makeOptions(ratio));
+        if (canvas.width > 0 && canvas.height > 0) break;
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    if (!canvas || canvas.width === 0) {
+      throw lastErr instanceof Error ? lastErr : new Error("Could not render biodata");
+    }
   } finally {
     host.remove();
   }
+
+  const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+  const pdf = new JsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+    compress: true,
+  });
+
+  const PAGE_W = 210;
+  const PAGE_H = 297;
+
+  // Fill page with the card's own edge color (matters for cards shorter than A4)
+  const px = canvas.getContext("2d")!.getImageData(2, 2, 1, 1).data;
+  pdf.setFillColor(px[0], px[1], px[2]);
+  pdf.rect(0, 0, PAGE_W, PAGE_H, "F");
+
+  // Fit onto ONE page, keep aspect ratio
+  let w = PAGE_W;
+  let h = (PAGE_W * canvas.height) / canvas.width;
+  if (h > PAGE_H) {
+    h = PAGE_H;
+    w = (PAGE_H * canvas.width) / canvas.height;
+  }
+  pdf.addImage(imgData, "JPEG", (PAGE_W - w) / 2, 0, w, h, undefined, "FAST");
+
+  const name = fileName.toLowerCase().endsWith(".pdf") ? fileName : `${fileName}.pdf`;
+  pdf.save(name);
 }

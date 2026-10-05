@@ -138,7 +138,7 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
               color: c.text,
             }}
           >
-            <span style={{ color: c.label }}>{label}</span>
+            <span style={{ color: c.label, whiteSpace: "nowrap" }}>{label}</span>
             <span>:</span>
             <span style={{ overflowWrap: "anywhere" }}>{value}</span>
           </div>
