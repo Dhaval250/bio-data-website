@@ -64,6 +64,7 @@ export interface BiodataFormData {
   biodataTitle?: string;
   mantra?: string;
   photoDataUrl?: string;
+  photoDataUrls?: string[];
   godImage?: string; // emoji or data URL
   customFields: CustomField[];
 }

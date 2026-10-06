@@ -102,6 +102,11 @@ export async function captureElementToPdf(
     /* ignore */
   }
 
+  const extraPhotos = [
+    element.getAttribute("data-extra-photo-1") || "",
+    element.getAttribute("data-extra-photo-2") || "",
+  ].filter(Boolean).slice(0, 2);
+
   const { host, node } = makeOffscreenClone(element);
   let canvas: HTMLCanvasElement;
   try {
@@ -167,6 +172,55 @@ export async function captureElementToPdf(
     w = (PAGE_H * canvas.width) / canvas.height;
   }
   pdf.addImage(imgData, "JPEG", (PAGE_W - w) / 2, 0, w, h, undefined, "FAST");
+
+  // Additional profile photos are placed on a fresh A4 page, split into two equal halves.
+  if (extraPhotos.length) {
+    pdf.addPage();
+    // Page 2 is intentionally split into two exact A4 halves.
+    // Each secondary photo gets the complete half-page area with no outer margin/gap.
+    const margin = 0;
+    const gap = 0;
+    const slotH = PAGE_H / 2;
+
+    const loadPhoto = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Could not load profile photo"));
+      img.src = src;
+    });
+
+    for (let i = 0; i < extraPhotos.length; i++) {
+      try {
+        const img = await loadPhoto(extraPhotos[i]);
+        const boxX = 0;
+        const boxY = i * slotH;
+        const boxW = PAGE_W;
+        const ir = img.width / img.height;
+        const br = boxW / slotH;
+
+        // Fit the complete photo inside its half-page slot. Do not crop or stretch
+        // portrait/landscape images; preserve the original aspect ratio.
+        let drawW: number;
+        let drawH: number;
+        if (ir > br) {
+          drawW = boxW;
+          drawH = boxW / ir;
+        } else {
+          drawH = slotH;
+          drawW = slotH * ir;
+        }
+
+        const x = boxX + (boxW - drawW) / 2;
+        const y = boxY + (slotH - drawH) / 2;
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(boxX, boxY, boxW, slotH, "F");
+        const imageFormat = img.src.startsWith("data:image/png") ? "PNG" : "JPEG";
+        pdf.addImage(img.src, imageFormat, x, y, drawW, drawH, undefined, "FAST");
+      } catch {
+        // Skip an invalid secondary photo without failing the complete PDF.
+      }
+    }
+  }
 
   const name = fileName.toLowerCase().endsWith(".pdf") ? fileName : `${fileName}.pdf`;
   pdf.save(name);

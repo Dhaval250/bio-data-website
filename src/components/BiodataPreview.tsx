@@ -9,6 +9,13 @@ interface Props {
   data: BiodataFormData;
 }
 
+
+function getProfilePhotos(data: BiodataFormData): string[] {
+  const photos = Array.isArray(data.photoDataUrls) ? data.photoDataUrls.filter(Boolean) : [];
+  if (photos.length) return photos.slice(0, 3);
+  return data.photoDataUrl ? [data.photoDataUrl] : [];
+}
+
 function Leaf({ className }: { className?: string }) {
   return (
     <svg className={className} width="64" height="80" viewBox="0 0 64 80" fill="none" aria-hidden>
@@ -61,6 +68,8 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
     template.id === "heritage-gold" ||
     template.id === "classic-ivory";
 
+  const profilePhotos = getProfilePhotos(data);
+
   const customRows = (data.customFields || []).filter(
     (f) => f.label?.trim() && f.value?.trim()
   );
@@ -77,6 +86,8 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
       <div
         ref={ref}
         data-biodata-preview
+        data-extra-photo-1={profilePhotos[1] || ""}
+        data-extra-photo-2={profilePhotos[2] || ""}
         id="biodata-preview-card"
         className="relative mx-auto w-full max-w-full overflow-hidden rounded-sm border border-[#e7e5e4] bg-[#faf8f5] shadow-lg sm:max-w-[480px]"
         style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
@@ -104,21 +115,15 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
               </div>
               <div className="mt-2 h-px w-10 bg-[#c4b5a0]" />
             </div>
-            <div className="flex h-[100px] w-[84px] shrink-0 flex-col items-center justify-center overflow-hidden rounded border border-[#d6cfc4] bg-[#f0ebe3] sm:h-[110px] sm:w-[92px]">
-              {data.photoDataUrl ? (
+            <div className="grid h-[100px] w-[84px] shrink-0 grid-cols-1 gap-0.5 overflow-hidden rounded border border-[#d6cfc4] bg-[#f0ebe3] sm:h-[110px] sm:w-[92px]" style={{ gridTemplateRows: profilePhotos.length > 1 ? `repeat(${profilePhotos.length}, minmax(0, 1fr))` : "1fr" }}>
+              {profilePhotos.length ? [profilePhotos[0]].map((photo, index) => (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={data.photoDataUrl}
-                  alt={data.fullName || "Photo"}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <>
+                <img key={photo.slice(0, 18) + index} src={photo} alt={`${data.fullName || "Photo"} ${index + 1}`} draggable={false} className="h-full w-full select-none object-contain object-center" onContextMenu={(e) => e.preventDefault()} />
+              )) : (
+                <div className="flex flex-col items-center justify-center">
                   <span className="text-3xl text-[#c4b5a0]">👤</span>
-                  <span className="mt-1 text-[8px] tracking-wider text-[#a39e94]">
-                    PHOTO HERE
-                  </span>
-                </>
+                  <span className="mt-1 text-[8px] tracking-wider text-[#a39e94]">PHOTO HERE</span>
+                </div>
               )}
             </div>
           </div>
@@ -246,17 +251,12 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
                     </div>
                   ))}
               </div>
-              <div
-                className="h-[120px] w-[96px] shrink-0 overflow-hidden border-2 bg-white"
-                style={{ borderColor: template.borderColor }}
-              >
-                {data.photoDataUrl ? (
+              <div className="grid h-[120px] w-[96px] shrink-0 overflow-hidden border-2 bg-white" style={{ borderColor: template.borderColor, gridTemplateRows: profilePhotos.length > 1 ? `repeat(${profilePhotos.length}, minmax(0, 1fr))` : "1fr" }}>
+                {profilePhotos.length ? [profilePhotos[0]].map((photo, index) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={data.photoDataUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-3xl text-stone-300">
-                    👤
-                  </div>
+                  <img key={photo.slice(0, 18) + index} src={photo} alt={`Photo ${index + 1}`} draggable={false} className="h-full w-full select-none object-contain object-center" onContextMenu={(e) => e.preventDefault()} />
+                )) : (
+                  <div className="flex h-full items-center justify-center text-3xl text-stone-300">👤</div>
                 )}
               </div>
             </div>
@@ -272,6 +272,8 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
     <div
       ref={ref}
       data-biodata-preview
+      data-extra-photo-1={profilePhotos[1] || ""}
+      data-extra-photo-2={profilePhotos[2] || ""}
       className="mx-auto w-full max-w-full sm:max-w-[420px] overflow-hidden rounded-xl border-2 bg-white shadow-lg"
       style={{ borderColor: template.borderColor }}
     >
@@ -298,10 +300,12 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
               </div>
             ))}
         </div>
-        {data.photoDataUrl && (
-          <div className="h-28 w-24 overflow-hidden rounded-lg border">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={data.photoDataUrl} alt="" className="h-full w-full object-cover" />
+        {profilePhotos.length > 0 && (
+          <div className="grid h-28 w-24 overflow-hidden rounded-lg border" style={{ gridTemplateRows: profilePhotos.length > 1 ? `repeat(${profilePhotos.length}, minmax(0, 1fr))` : "1fr" }}>
+            {[profilePhotos[0]].filter(Boolean).map((photo, index) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={photo.slice(0, 18) + index} src={photo} alt={`Photo ${index + 1}`} draggable={false} className="h-full w-full select-none object-contain object-center" onContextMenu={(e) => e.preventDefault()} />
+            ))}
           </div>
         )}
       </div>

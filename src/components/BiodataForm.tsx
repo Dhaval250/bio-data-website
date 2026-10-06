@@ -5,6 +5,7 @@ import { BiodataFormData, FormFieldRow, Language } from "@/lib/types";
 import TemplateSelector from "./TemplateSelector";
 import TemplateCarousel from "./TemplateCarousel";
 import BiodataPreview from "./BiodataPreview";
+import PreviewProtection from "./PreviewProtection";
 import { cn } from "@/lib/utils";
 
 import { t, fieldLabel, fieldPlaceholder } from "@/lib/i18n";
@@ -161,6 +162,7 @@ const initialData: BiodataFormData = {
   biodataTitle: "Biodata",
   mantra: "|| Shri Ganeshaya Namah ||",
   godImage: "🕉️",
+  photoDataUrls: [],
   customFields: [],
 };
 
@@ -417,8 +419,15 @@ export default function BiodataForm() {
     }
     if (s) {
       if (s.data) {
+        const migratedPhotos = Array.isArray(s.data.photoDataUrls)
+          ? s.data.photoDataUrls.filter(Boolean).slice(0, 3)
+          : s.data.photoDataUrl
+            ? [s.data.photoDataUrl]
+            : [];
         setData({
           ...s.data,
+          photoDataUrls: migratedPhotos,
+          photoDataUrl: migratedPhotos[0],
           templateId: preferred || s.data.templateId || "abstract-orange",
         });
       } else if (preferred) {
@@ -623,11 +632,70 @@ export default function BiodataForm() {
   }, []);
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => update("photoDataUrl", reader.result as string);
-    reader.readAsDataURL(file);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const current = Array.isArray(data.photoDataUrls)
+      ? data.photoDataUrls.filter(Boolean)
+      : data.photoDataUrl
+        ? [data.photoDataUrl]
+        : [];
+    const slots = Math.max(0, 3 - current.length);
+    if (!slots) {
+      e.target.value = "";
+      setError("You can add up to 3 profile photos.");
+      return;
+    }
+
+    const selected = files.slice(0, slots);
+    let remaining = selected.length;
+    const added: string[] = [];
+    selected.forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        remaining -= 1;
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        added.push(String(reader.result));
+        remaining -= 1;
+        if (remaining === 0) {
+          setData((prev) => {
+            const existing = Array.isArray(prev.photoDataUrls)
+              ? prev.photoDataUrls.filter(Boolean)
+              : prev.photoDataUrl
+                ? [prev.photoDataUrl]
+                : [];
+            const photos = [...existing, ...added].slice(0, 3);
+            return { ...prev, photoDataUrls: photos, photoDataUrl: photos[0] };
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  };
+
+  const removePhoto = (index: number) => {
+    setData((prev) => {
+      const photos = (Array.isArray(prev.photoDataUrls)
+        ? prev.photoDataUrls
+        : prev.photoDataUrl
+          ? [prev.photoDataUrl]
+          : []
+      ).filter((_, i) => i !== index);
+      return { ...prev, photoDataUrls: photos, photoDataUrl: photos[0] };
+    });
+  };
+
+  const setPrimaryPhoto = (index: number) => {
+    setData((prev) => {
+      const photos = [...(prev.photoDataUrls || (prev.photoDataUrl ? [prev.photoDataUrl] : []))];
+      if (!photos[index]) return prev;
+      const [primary] = photos.splice(index, 1);
+      photos.unshift(primary);
+      return { ...prev, photoDataUrls: photos, photoDataUrl: photos[0] };
+    });
   };
 
   const setFieldsForStep = (section: FormFieldRow["section"], next: FormFieldRow[]) => {
@@ -930,37 +998,48 @@ export default function BiodataForm() {
                   </div>
                 </div>
 
-                {/* Profile photo */}
+                {/* Profile photos — up to 3 */}
                 <div className="rounded-xl border border-dashed border-[#c4a35a]/70 bg-gradient-to-br from-[#f0ebe3]/30/80 to-stone-50 p-4">
-                  <p className="mb-3 text-sm font-semibold text-stone-700">{t(lang, "choosePhoto")}</p>
-                  <div className="flex flex-wrap items-start gap-4">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-stone-200/80">
-                      {data.photoDataUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={data.photoDataUrl} alt="Profile" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="text-3xl text-stone-400">👤</span>
-                      )}
-                    </div>
-                    <div>
-                      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-stone-700">{t(lang, "choosePhoto")}</p>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#9a7b3c] ring-1 ring-[#e7e5e4]">
+                      {(data.photoDataUrls || (data.photoDataUrl ? [data.photoDataUrl] : [])).length}/3
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-start gap-3">
+                    {(data.photoDataUrls || (data.photoDataUrl ? [data.photoDataUrl] : [])).map((photo, index) => (
+                      <div key={`${photo.slice(0, 20)}-${index}`} className="group relative">
+                        <div className={cn(
+                          "flex h-24 w-20 items-center justify-center overflow-hidden rounded-xl bg-stone-200/80 ring-1",
+                          index === 0 ? "ring-[#c4a35a] ring-2" : "ring-[#e7e5e4]"
+                        )}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={photo} alt={`Profile ${index + 1}`} draggable={false} className="h-full w-full select-none object-contain object-center" onContextMenu={(e) => e.preventDefault()} />
+                        </div>
+                        {index === 0 ? (
+                          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-[#1c1917] px-2 py-0.5 text-[9px] font-bold text-white">Primary</span>
+                        ) : (
+                          <button type="button" onClick={() => setPrimaryPhoto(index)} className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[9px] font-semibold text-[#9a7b3c] shadow ring-1 ring-[#e7e5e4]">Use primary</button>
+                        )}
+                        <button type="button" aria-label={`Remove photo ${index + 1}`} onClick={() => removePhoto(index)} className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow">×</button>
+                      </div>
+                    ))}
+                    {((data.photoDataUrls || (data.photoDataUrl ? [data.photoDataUrl] : [])).length < 3) && (
+                      <div className="flex h-24 w-20 items-center justify-center rounded-xl border-2 border-dashed border-[#d6cfc4] bg-white/70">
+                        <span className="text-2xl text-stone-300">+</span>
+                      </div>
+                    )}
+                    <div className="min-w-[180px] flex-1">
+                      <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhoto} />
                       <button
                         type="button"
                         onClick={() => fileRef.current?.click()}
-                        className="rounded-lg bg-[#c4a35a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1c1917]"
+                        disabled={(data.photoDataUrls || (data.photoDataUrl ? [data.photoDataUrl] : [])).length >= 3}
+                        className="rounded-lg bg-[#c4a35a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1c1917] disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        {t(lang, "upload")}
+                        {t(lang, "upload")} photos
                       </button>
-                      <p className="mt-1 text-xs text-stone-500">{t(lang, "photoHint")}</p>
-                      {data.photoDataUrl && (
-                        <button
-                          type="button"
-                          onClick={() => update("photoDataUrl", undefined)}
-                          className="mt-1 text-xs font-medium text-red-600 hover:underline"
-                        >
-                          {t(lang, "remove")}
-                        </button>
-                      )}
+                      <p className="mt-1 text-xs text-stone-500">Add up to 3 photos. The first/Primary photo is used in the main photo position.</p>
                     </div>
                     <div className="min-w-[180px] flex-1 rounded-lg border border-[#e7e5e4] bg-white/80 p-3 text-xs text-stone-600">
                       <p className="mb-1 font-semibold text-stone-700">{t(lang, "photoTips")}</p>
@@ -1133,7 +1212,9 @@ export default function BiodataForm() {
         </div>
       ) : (
         <div className="space-y-8">
-          <BiodataPreview data={previewData} />
+          <PreviewProtection>
+            <BiodataPreview data={previewData} />
+          </PreviewProtection>
 
           {/* Template strip — pick another design, preview updates instantly */}
           <TemplateCarousel

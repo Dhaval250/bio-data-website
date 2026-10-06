@@ -34,6 +34,7 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
 ) {
   const L = getArtLayout(data.templateId)!;
   const c = L.color;
+  const profilePhotos = (Array.isArray(data.photoDataUrls) ? data.photoDataUrls.filter(Boolean) : data.photoDataUrl ? [data.photoDataUrl] : []).slice(0, 3);
 
   const bodyRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -200,6 +201,8 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
     <div
       ref={setRefs}
       data-biodata-preview
+      data-extra-photo-1={profilePhotos[1] || ""}
+      data-extra-photo-2={profilePhotos[2] || ""}
       id="biodata-preview-card"
       className="relative mx-auto w-full max-w-[480px] overflow-hidden shadow-xl"
       style={{
@@ -318,13 +321,28 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
             boxSizing: "border-box",
           }}
         >
-          {data.photoDataUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={data.photoDataUrl}
-              alt={data.fullName || "Photo"}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
+          {profilePhotos.length ? (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {/* The main profile photo must use the entire photo frame.
+                  Additional photos are rendered on the dedicated extra-photo page.
+                  The old grid divided this frame into 2/3 rows when multiple photos
+                  were selected, making the main image appear unnecessarily tiny. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={profilePhotos[0]}
+                alt={`${data.fullName || "Photo"} 1`}
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  objectPosition: "center",
+                  display: "block",
+                  userSelect: "none",
+                }}
+              />
+            </div>
           ) : (
             <div
               style={{

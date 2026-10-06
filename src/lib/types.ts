@@ -61,7 +61,10 @@ export interface BiodataFormData {
   templateId: string;
   biodataTitle?: string;
   mantra?: string;
+  /** Backward-compatible primary photo */
   photoDataUrl?: string;
+  /** Up to 3 profile photos; first photo is the primary photo */
+  photoDataUrls?: string[];
   godImage?: string; // emoji or data URL
   customFields: CustomField[];
 }

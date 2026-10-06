@@ -234,18 +234,17 @@ async function drawPhoto(
       ctx.clip();
       const ir = img.width / img.height;
       const pr = w / h;
-      let sx = 0,
-        sy = 0,
-        sw = img.width,
-        sh = img.height;
+      // Contain: show the entire profile image without cropping or stretching.
+      let dw = w;
+      let dh = h;
       if (ir > pr) {
-        sw = img.height * pr;
-        sx = (img.width - sw) / 2;
+        dh = w / ir;
       } else {
-        sh = img.width / pr;
-        sy = (img.height - sh) / 2;
+        dw = h * ir;
       }
-      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+      const dx = x + (w - dw) / 2;
+      const dy = y + (h - dh) / 2;
+      ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
       ctx.restore();
       ctx.strokeStyle = border;
       ctx.lineWidth = 2.5;
