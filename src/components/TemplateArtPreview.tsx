@@ -48,9 +48,13 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
     [ref]
   );
 
-  const customRows = (data.customFields || []).filter((f) => f.label?.trim() && f.value?.trim());
-
   type Row = [string, string | undefined];
+  const customRows = (data.customFields || []).filter((f) => f.label?.trim() && f.value?.trim());
+  const customIn = (section: "personal" | "family" | "contact"): Row[] =>
+    customRows
+      .filter((f) => (f.section || "personal") === section)
+      .map((f): Row => [f.label, f.value]);
+
   const personal: Row[] = [
     ["Full Name", data.fullName],
     ["Date of Birth", data.dob],
@@ -64,7 +68,7 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
     ["Gotra", data.gotra],
     ["Higher Education", data.education],
     ["Occupation", data.occupation],
-    ...customRows.slice(0, 6).map((f): Row => [f.label, f.value]),
+    ...customIn("personal"),
   ];
   const family: Row[] = [
     ["Father's Name", data.fatherName],
@@ -73,11 +77,13 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
     ["Mother's Occupation", data.motherOccupation],
     ["Brothers / Sisters", data.siblings],
     ["Family Background", data.familyDetails],
+    ...customIn("family"),
   ];
   const contact: Row[] = [
     ["Mobile Number", data.phone],
     ["Email", data.email],
     ["Address", data.address],
+    ...customIn("contact"),
   ];
   const has = (rows: Row[]) => rows.filter(([, v]) => v && String(v).trim());
 
@@ -98,7 +104,7 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
       const topPx = (cardH * L.headY) / 100 - ((2 * L.headGap - L.pitch) / 2) * (w / 100);
       const avail = cardH * L.maxY - topPx;
       const need = body.scrollHeight; // layout height (unaffected by transform)
-      const next = need > avail && need > 0 && avail > 0 ? Math.max(0.55, avail / need) : 1;
+      const next = need > avail && need > 0 && avail > 0 ? Math.max(0.4, avail / need) : 1;
       setScale((prev) => (Math.abs(prev - next) < 0.005 ? prev : next));
     };
     recalc();

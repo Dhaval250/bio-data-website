@@ -730,7 +730,7 @@ export default function BiodataForm() {
           (next as unknown as Record<string, unknown>)[k] = f.value;
         }
       } else if (f.label.trim() && f.value.trim()) {
-        customs.push({ id: f.id, label: f.label, value: f.value, include: true });
+        customs.push({ id: f.id, label: f.label, value: f.value, include: true, section: f.section });
       }
     }
     next.customFields = customs;

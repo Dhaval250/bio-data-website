@@ -170,7 +170,7 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
 
               {customRows.length > 0 && (
                 <>
-                  <SectionBar icon="★" title="HOBBIES & INTERESTS" />
+                  <SectionBar icon="★" title="ADDITIONAL DETAILS" />
                   {customRows.map((f) => (
                     <Line key={f.id} label={f.label} value={f.value} />
                   ))}
