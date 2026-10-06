@@ -17,6 +17,7 @@ export interface CustomField {
   label: string;
   value: string;
   include?: boolean;
+  section?: "personal" | "family" | "contact";
 }
 
 /** Single form row: editable label, value, include, order */
