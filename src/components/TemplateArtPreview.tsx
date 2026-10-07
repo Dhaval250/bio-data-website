@@ -195,6 +195,7 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
       data-biodata-preview
       data-extra-photo-1={profilePhotos[1] || ""}
       data-extra-photo-2={profilePhotos[2] || ""}
+      data-page-bg={L.bg}
       id="biodata-preview-card"
       className="relative mx-auto w-full max-w-[480px] overflow-hidden shadow-xl"
       style={{

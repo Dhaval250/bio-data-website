@@ -6,6 +6,7 @@ import TemplateSelector from "./TemplateSelector";
 import TemplateCarousel from "./TemplateCarousel";
 import BiodataPreview from "./BiodataPreview";
 import PreviewProtection from "./PreviewProtection";
+import ExtraPhotosPreview from "./ExtraPhotosPreview";
 import { cn } from "@/lib/utils";
 
 import { t, fieldLabel, fieldPlaceholder } from "@/lib/i18n";
@@ -1219,6 +1220,7 @@ export default function BiodataForm() {
         <div className="space-y-8">
           <PreviewProtection>
             <BiodataPreview data={previewData} />
+            <ExtraPhotosPreview data={previewData} />
           </PreviewProtection>
 
           {/* Template strip — pick another design, preview updates instantly */}
