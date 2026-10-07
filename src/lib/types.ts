@@ -68,6 +68,8 @@ export interface BiodataFormData {
   photoDataUrls?: string[];
   godImage?: string; // emoji or data URL
   customFields: CustomField[];
+  /** User-arranged row order per section. Keys: built-in field key, or `custom:<id>` */
+  fieldOrder?: Partial<Record<"personal" | "family" | "contact", string[]>>;
 }
 
 export interface Template {

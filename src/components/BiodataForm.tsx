@@ -778,6 +778,7 @@ export default function BiodataForm() {
     const all = [...personalFields, ...familyFields, ...contactFields];
     const next: BiodataFormData = { ...data };
     const customs: BiodataFormData["customFields"] = [];
+    const fieldOrder: NonNullable<BiodataFormData["fieldOrder"]> = { personal: [], family: [], contact: [] };
 
     for (const f of all) {
       if (!f.include) continue;
@@ -785,6 +786,9 @@ export default function BiodataForm() {
         f.key in initialData &&
         !f.key.startsWith("custom-") &&
         !["maritalStatus", "gana", "diet", "disability", "complexion", "blood", "salary", "nativePlaceExtra", "hobbies", "expectations"].includes(f.key);
+
+      const isCustom = !(f.key === "rashi" || f.key === "nakshatra" || f.key === "gotra" || f.key === "manglik" || known);
+      fieldOrder[f.section]!.push(isCustom ? `custom:${f.id}` : f.key);
 
       if (f.key === "rashi" || f.key === "nakshatra" || f.key === "gotra") {
         (next as unknown as Record<string, unknown>)[f.key] = f.value;
@@ -802,6 +806,7 @@ export default function BiodataForm() {
       }
     }
     next.customFields = customs;
+    next.fieldOrder = fieldOrder;
     next.fullName = personalFields.find((f) => f.key === "fullName")?.value || data.fullName;
     return next;
   }, [data, personalFields, familyFields, contactFields]);

@@ -11,6 +11,7 @@ import {
 } from "react";
 import { BiodataFormData } from "@/lib/types";
 import { getArtLayout } from "@/lib/templates";
+import { orderedRows } from "@/lib/orderedRows";
 
 /**
  * Preview for the artwork templates (Orange, Lotus, Red Velvet, Rose, Blue).
@@ -50,42 +51,33 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
   );
 
   type Row = [string, string | undefined];
-  const customRows = (data.customFields || []).filter((f) => f.label?.trim() && f.value?.trim());
-  const customIn = (section: "personal" | "family" | "contact"): Row[] =>
-    customRows
-      .filter((f) => (f.section || "personal") === section)
-      .map((f): Row => [f.label, f.value]);
-
-  const personal: Row[] = [
-    ["Full Name", data.fullName],
-    ["Date of Birth", data.dob],
-    ["Height", data.height],
-    ["Place of Birth", data.nativePlace],
-    ["Religion", data.religion],
-    ["Caste", data.caste],
-    ["Zodiac Sign", data.rashi],
-    ["Nakshatra", data.nakshatra],
-    ["Manglik", data.manglik],
-    ["Gotra", data.gotra],
-    ["Higher Education", data.education],
-    ["Occupation", data.occupation],
-    ...customIn("personal"),
-  ];
-  const family: Row[] = [
-    ["Father's Name", data.fatherName],
-    ["Father's Occupation", data.fatherOccupation],
-    ["Mother's Name", data.motherName],
-    ["Mother's Occupation", data.motherOccupation],
-    ["Brothers / Sisters", data.siblings],
-    ["Family Background", data.familyDetails],
-    ...customIn("family"),
-  ];
-  const contact: Row[] = [
-    ["Mobile Number", data.phone],
-    ["Email", data.email],
-    ["Address", data.address],
-    ...customIn("contact"),
-  ];
+  const personal: Row[] = orderedRows(data, "personal", [
+    { key: "fullName", label: "Full Name", value: data.fullName },
+    { key: "dob", label: "Date of Birth", value: data.dob },
+    { key: "height", label: "Height", value: data.height },
+    { key: "nativePlace", label: "Place of Birth", value: data.nativePlace },
+    { key: "religion", label: "Religion", value: data.religion },
+    { key: "caste", label: "Caste", value: data.caste },
+    { key: "rashi", label: "Zodiac Sign", value: data.rashi },
+    { key: "nakshatra", label: "Nakshatra", value: data.nakshatra },
+    { key: "manglik", label: "Manglik", value: data.manglik },
+    { key: "gotra", label: "Gotra", value: data.gotra },
+    { key: "education", label: "Higher Education", value: data.education },
+    { key: "occupation", label: "Occupation", value: data.occupation },
+  ]);
+  const family: Row[] = orderedRows(data, "family", [
+    { key: "fatherName", label: "Father's Name", value: data.fatherName },
+    { key: "fatherOccupation", label: "Father's Occupation", value: data.fatherOccupation },
+    { key: "motherName", label: "Mother's Name", value: data.motherName },
+    { key: "motherOccupation", label: "Mother's Occupation", value: data.motherOccupation },
+    { key: "siblings", label: "Brothers / Sisters", value: data.siblings },
+    { key: "familyDetails", label: "Family Background", value: data.familyDetails },
+  ]);
+  const contact: Row[] = orderedRows(data, "contact", [
+    { key: "phone", label: "Mobile Number", value: data.phone },
+    { key: "email", label: "Email", value: data.email },
+    { key: "address", label: "Address", value: data.address },
+  ]);
   const has = (rows: Row[]) => rows.filter(([, v]) => v && String(v).trim());
 
   const title = data.biodataTitle?.trim() || L.defaults.title;
