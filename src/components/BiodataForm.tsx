@@ -8,6 +8,7 @@ import BiodataPreview from "./BiodataPreview";
 import PreviewProtection from "./PreviewProtection";
 import ExtraPhotosPreview from "./ExtraPhotosPreview";
 import { cn } from "@/lib/utils";
+import { savePhotos, loadPhotos, clearPhotos } from "@/lib/photoStore";
 
 import { t, fieldLabel, fieldPlaceholder } from "@/lib/i18n";
 
@@ -67,25 +68,45 @@ type SessionSnapshot = {
   showPreview: boolean;
 };
 
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
 function loadSession(): SessionSnapshot | null {
   if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as SessionSnapshot;
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed;
-  } catch {
-    return null;
+  // sessionStorage first, localStorage as backup (mobile browsers often discard
+  // the tab/session when you take a screenshot, switch apps or low memory)
+  for (const store of [() => sessionStorage, () => localStorage]) {
+    try {
+      const raw = store().getItem(SESSION_KEY);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as SessionSnapshot & { savedAt?: number };
+      if (!parsed || typeof parsed !== "object") continue;
+      if (parsed.savedAt && Date.now() - parsed.savedAt > SESSION_MAX_AGE_MS) continue;
+      return parsed;
+    } catch {
+      /* try next */
+    }
   }
+  return null;
 }
 
 function saveSession(snap: SessionSnapshot) {
   if (typeof window === "undefined") return;
+  // Photos are stored separately in IndexedDB (too big for web storage)
+  const light = {
+    ...snap,
+    data: { ...snap.data, photoDataUrls: [], photoDataUrl: undefined },
+    savedAt: Date.now(),
+  };
+  const json = JSON.stringify(light);
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(snap));
+    sessionStorage.setItem(SESSION_KEY, json);
   } catch {
-    // quota / private mode — ignore
+    /* quota / private mode */
+  }
+  try {
+    localStorage.setItem(SESSION_KEY, json);
+  } catch {
+    /* quota / private mode */
   }
 }
 
@@ -93,9 +114,11 @@ function clearSession() {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_KEY);
   } catch {
     /* ignore */
   }
+  void clearPhotos();
 }
 
 function makeId() {
@@ -407,6 +430,7 @@ export default function BiodataForm() {
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [photosReady, setPhotosReady] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Client hydrate (avoid SSR mismatch)
@@ -443,6 +467,17 @@ export default function BiodataForm() {
       setData((prev) => ({ ...prev, templateId: preferred! }));
     }
     setHydrated(true);
+    // Restore photos (stored separately in IndexedDB)
+    void loadPhotos().then((photos) => {
+      if (photos.length) {
+        setData((prev) =>
+          (prev.photoDataUrls || []).filter(Boolean).length
+            ? prev
+            : { ...prev, photoDataUrls: photos, photoDataUrl: photos[0] }
+        );
+      }
+      setPhotosReady(true);
+    });
   }, []);
 
   // Homepage "Choose Your Perfect Template" → apply selection live
@@ -481,6 +516,31 @@ export default function BiodataForm() {
       showPreview,
     });
   }, [hydrated, data, step, personalFields, familyFields, contactFields, showPreview]);
+
+  // Persist photos to IndexedDB (only after restore finished, so we never overwrite with empty)
+  useEffect(() => {
+    if (!photosReady) return;
+    void savePhotos((data.photoDataUrls || []).filter(Boolean));
+  }, [photosReady, data.photoDataUrls]);
+
+  // Flush latest draft immediately when the page is hidden/closed (screenshot, app switch, reload)
+  const latestRef = useRef<SessionSnapshot | null>(null);
+  latestRef.current = { data, step, personalFields, familyFields, contactFields, showPreview };
+  useEffect(() => {
+    if (!hydrated) return;
+    const flush = () => {
+      if (latestRef.current) saveSession(latestRef.current);
+    };
+    const onVis = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [hydrated]);
 
   const update = useCallback(
     <K extends keyof BiodataFormData>(key: K, value: BiodataFormData[K]) => {

@@ -84,10 +84,18 @@ export default function PreviewProtection({ children }: Props) {
     };
 
     // Hide content when page is not actively focused/visible (snipping tools, recorders, app switcher)
+    // Mobile browsers fire blur/focus unreliably (keyboard, share sheet, screenshot UI),
+    // which could leave the preview stuck blurred -> only use blur/focus on desktop.
+    const isTouch =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(pointer: coarse)").matches || navigator.maxTouchPoints > 0);
     const onVisibility = () => setHidden(document.visibilityState === "hidden");
-    const onBlur = () => setHidden(true);
+    const onBlur = () => {
+      if (!isTouch) setHidden(true);
+    };
     const onFocus = () => setHidden(false);
     const onPageHide = () => setHidden(true);
+    const onPageShow = () => setHidden(false);
 
     const stop = (event: Event) => event.preventDefault();
 
@@ -97,6 +105,7 @@ export default function PreviewProtection({ children }: Props) {
     window.addEventListener("blur", onBlur);
     window.addEventListener("focus", onFocus);
     window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("pageshow", onPageShow);
     document.addEventListener("contextmenu", stop, true);
     document.addEventListener("dragstart", stop, true);
     document.addEventListener("selectstart", stop, true);
@@ -116,6 +125,7 @@ export default function PreviewProtection({ children }: Props) {
       window.removeEventListener("blur", onBlur);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("pageshow", onPageShow);
       document.removeEventListener("contextmenu", stop, true);
       document.removeEventListener("dragstart", stop, true);
       document.removeEventListener("selectstart", stop, true);

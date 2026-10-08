@@ -176,11 +176,43 @@ export async function captureElementToPdf(
   // Additional profile photos are placed on a fresh A4 page, split into two equal halves.
   if (extraPhotos.length) {
     pdf.addPage();
+
+    // Same template on page 2: paint the template artwork as the page background
+    // (non-artwork templates reuse page-1 edge colour, set above).
+    const pageBg = element.getAttribute("data-page-bg");
+    let hasBg = false;
+    if (pageBg) {
+      try {
+        const bgImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const im = new Image();
+          im.onload = () => resolve(im);
+          im.onerror = () => reject(new Error("bg"));
+          im.src = pageBg;
+        });
+        const c = document.createElement("canvas");
+        c.width = bgImg.naturalWidth;
+        c.height = bgImg.naturalHeight;
+        c.getContext("2d")!.drawImage(bgImg, 0, 0);
+        // artwork is A4 ratio (1000x1414) -> stretch to fill the page exactly
+        pdf.addImage(c.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, PAGE_W, PAGE_H, undefined, "FAST");
+        hasBg = true;
+      } catch {
+        /* fall back to plain colour */
+      }
+    }
+    if (!hasBg) {
+      pdf.setFillColor(px[0], px[1], px[2]);
+      pdf.rect(0, 0, PAGE_W, PAGE_H, "F");
+    }
+    // Keep photos inside the decorative frame of the artwork
+    const insetX = hasBg ? 22 : 0;
+    const insetTop = hasBg ? 34 : 0;
+    const insetBottom = hasBg ? 34 : 0;
     // Page 2 is intentionally split into two exact A4 halves.
     // Each secondary photo gets the complete half-page area with no outer margin/gap.
     const margin = 0;
     const gap = 0;
-    const slotH = PAGE_H / 2;
+    const slotH = (PAGE_H - insetTop - insetBottom) / 2;
 
     const loadPhoto = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
@@ -192,9 +224,9 @@ export async function captureElementToPdf(
     for (let i = 0; i < extraPhotos.length; i++) {
       try {
         const img = await loadPhoto(extraPhotos[i]);
-        const boxX = 0;
-        const boxY = i * slotH;
-        const boxW = PAGE_W;
+        const boxX = insetX;
+        const boxY = insetTop + i * slotH;
+        const boxW = PAGE_W - insetX * 2;
         const ir = img.width / img.height;
         const br = boxW / slotH;
 
@@ -212,8 +244,10 @@ export async function captureElementToPdf(
 
         const x = boxX + (boxW - drawW) / 2;
         const y = boxY + (slotH - drawH) / 2;
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(boxX, boxY, boxW, slotH, "F");
+        if (!hasBg) {
+          pdf.setFillColor(255, 255, 255);
+          pdf.rect(boxX, boxY, boxW, slotH, "F");
+        }
         const imageFormat = img.src.startsWith("data:image/png") ? "PNG" : "JPEG";
         pdf.addImage(img.src, imageFormat, x, y, drawW, drawH, undefined, "FAST");
       } catch {
