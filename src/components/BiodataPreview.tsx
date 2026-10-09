@@ -4,6 +4,7 @@ import { forwardRef } from "react";
 import { BiodataFormData } from "@/lib/types";
 import { getTemplate, getArtLayout } from "@/lib/templates";
 import TemplateArtPreview from "./TemplateArtPreview";
+import RedGoldTemplatePreview from "./RedGoldTemplatePreview";
 
 interface Props {
   data: BiodataFormData;
@@ -73,6 +74,11 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
   const customRows = (data.customFields || []).filter(
     (f) => f.label?.trim() && f.value?.trim()
   );
+
+  // ——— RED & GOLD TRADITIONAL ———
+  if (template.id === "red-gold") {
+    return <RedGoldTemplatePreview ref={ref} data={{ ...data, templateId: template.id }} />;
+  }
 
   // ——— ARTWORK TEMPLATES (Orange / Lotus / Red Velvet / Rose / Blue) ———
   // Drawn on top of the real template artwork so the preview matches the selected design.

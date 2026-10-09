@@ -205,9 +205,12 @@ export async function captureElementToPdf(
       pdf.rect(0, 0, PAGE_W, PAGE_H, "F");
     }
     // Keep photos inside the decorative frame of the artwork
-    const insetX = hasBg ? 22 : 0;
-    const insetTop = hasBg ? 34 : 0;
-    const insetBottom = hasBg ? 34 : 0;
+    // per-template margins (mm) so photos stay inside the artwork frame
+    const p2 = (element.getAttribute("data-page2") || "").split(",").map(Number);
+    const hasP2 = p2.length === 3 && p2.every((n) => Number.isFinite(n));
+    const insetX = hasBg ? (hasP2 ? p2[0] : 22) : 0;
+    const insetTop = hasBg ? (hasP2 ? p2[1] : 34) : 0;
+    const insetBottom = hasBg ? (hasP2 ? p2[2] : 34) : 0;
     // Page 2 is intentionally split into two exact A4 halves.
     // Each secondary photo gets the complete half-page area with no outer margin/gap.
     const margin = 0;

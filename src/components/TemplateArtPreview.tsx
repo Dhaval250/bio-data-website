@@ -107,7 +107,7 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
     return () => ro?.disconnect();
   }, [data, L.headY, L.headGap, L.pitch, L.maxY]);
 
-  const colW = L.photo.left - L.left - 2; // % width left for text beside the photo
+  const colW = L.bodyW ?? L.photo.left - L.left - 2; // % width left for text beside the photo
 
   const section = (heading: string, rows: Row[], first: boolean): ReactNode => {
     const filled = has(rows);
@@ -122,9 +122,29 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
             lineHeight: `${headLH}cqw`,
             fontWeight: 700,
             color: c.heading,
+            height: `${headLH}cqw`,
+            display: "flex",
+            alignItems: "center",
           }}
         >
-          {heading}
+          {L.headBox && c.headingBg ? (
+            <span
+              style={{
+                display: "inline-block",
+                marginLeft: `-${L.headBox.inset}cqw`,
+                padding: `0 ${L.headBox.padX}cqw`,
+                height: `${L.headBox.h}cqw`,
+                lineHeight: `${L.headBox.h}cqw`,
+                background: c.headingBg,
+                color: c.headingText || "#fff",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {heading}
+            </span>
+          ) : (
+            heading
+          )}
         </div>
         {filled.map(([label, value]) => (
           <div
@@ -137,8 +157,8 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
               color: c.text,
             }}
           >
-            <span style={{ color: c.label, whiteSpace: "nowrap" }}>{label}</span>
-            <span>:</span>
+            <span style={{ color: c.label, whiteSpace: "nowrap", fontWeight: L.labelBold ? 700 : undefined }}>{label}</span>
+            <span>{L.colon === false ? "" : ":"}</span>
             <span style={{ overflowWrap: "anywhere" }}>{value}</span>
           </div>
         ))}
@@ -196,12 +216,13 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
       data-extra-photo-1={profilePhotos[1] || ""}
       data-extra-photo-2={profilePhotos[2] || ""}
       data-page-bg={L.bg}
+      data-page2={L.page2 ? `${L.page2.x},${L.page2.top},${L.page2.bottom}` : ""}
       id="biodata-preview-card"
       className="relative mx-auto w-full max-w-[480px] overflow-hidden shadow-xl"
       style={{
         containerType: "inline-size",
         aspectRatio: "1000 / 1414",
-        fontFamily: "var(--font-mukta), 'Noto Sans Devanagari', 'Segoe UI', sans-serif",
+        fontFamily: L.font || "var(--font-mukta), 'Noto Sans Devanagari', 'Segoe UI', sans-serif",
       }}
     >
       {/* Template artwork (text-free). In-flow so the card keeps the exact A4 ratio in print. */}
@@ -210,7 +231,7 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
 
       <div id="biodata-print-inner" style={{ position: "absolute", inset: 0 }}>
         {/* Header */}
-        {L.header.stacked ? (
+        {L.header.none ? null : L.header.stacked ? (
           <>
             <div
               style={{
@@ -307,8 +328,8 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
             top: `${L.photo.top}%`,
             width: `${L.photo.w}cqw`,
             height: `${L.photo.h}cqw`,
-            border: `0.4cqw solid ${c.photoBorder}`,
-            borderRadius: "0.6cqw",
+            border: L.photo.round ? "none" : `0.4cqw solid ${c.photoBorder}`,
+            borderRadius: L.photo.round ? "50%" : "0.6cqw",
             overflow: "hidden",
             background: "rgba(128,128,128,0.18)",
             boxSizing: "border-box",
@@ -329,7 +350,7 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
                 style={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "contain",
+                  objectFit: L.photo.round ? "cover" : "contain",
                   objectPosition: "center",
                   display: "block",
                   userSelect: "none",

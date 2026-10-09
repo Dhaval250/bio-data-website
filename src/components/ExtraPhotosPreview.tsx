@@ -16,7 +16,9 @@ export default function ExtraPhotosPreview({ data }: { data: BiodataFormData }) 
   const all = Array.isArray(data.photoDataUrls) ? data.photoDataUrls.filter(Boolean) : [];
   const extra = all.slice(1, 3);
   if (!extra.length) return null;
-  const bg = getArtLayout(data.templateId)?.bg;
+  const layout = getArtLayout(data.templateId);
+  const bg = layout?.bg;
+  const m = layout?.page2 ?? { x: 22, top: 34, bottom: 34 }; // mm on A4 (210 x 297)
 
   return (
     <div className="mx-auto mt-6 w-full max-w-[480px]">
@@ -28,7 +30,7 @@ export default function ExtraPhotosPreview({ data }: { data: BiodataFormData }) 
         style={{
           aspectRatio: "210 / 297",
           gridTemplateRows: "1fr 1fr",
-          padding: bg ? "11.5% 10.5%" : 0,
+          padding: bg ? `${(m.top / 210) * 100}% ${(m.x / 210) * 100}% ${(m.bottom / 210) * 100}%` : 0,
           backgroundImage: bg ? `url(${bg})` : undefined,
           backgroundSize: "100% 100%",
         }}
