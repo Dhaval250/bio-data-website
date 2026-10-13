@@ -140,8 +140,8 @@ export const TEMPLATES: Template[] = [
 ];
 
 export function templateImageSrc(id: string): string {
-  // All previews as PNG so every browser shows full image
-  return `/templates/${id}.png`;
+  // Small (600px) WebP thumbnails, ~30-60 KB each instead of the 0.6-1.5 MB PNGs
+  return `/templates/thumb/${id}.webp`;
 }
 
 export function getTemplate(id: string): Template {

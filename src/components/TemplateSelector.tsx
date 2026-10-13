@@ -13,7 +13,7 @@ export default function TemplateSelector({
   return (
     <div className="space-y-5 rounded-2xl border-2 border-[#e8d5a3] bg-gradient-to-b from-[#fffbf0] to-white p-4 shadow-sm sm:p-6">
       <div className="text-center sm:text-left">
-        <p className="text-xs font-bold uppercase tracking-wider text-[#c4a35a]">
+        <p className="text-xs font-bold uppercase tracking-wider text-[#7a5c14]">
           Final step
         </p>
         <h3 className="mt-1 text-lg font-bold text-stone-900 sm:text-xl">
@@ -43,12 +43,15 @@ export default function TemplateSelector({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={templateImageSrc(tpl.id)}
-                  alt={tpl.name}
+                  alt={`${tpl.name} template`}
+                  width={600}
+                  height={848}
                   className="h-full max-h-full w-full object-contain object-center"
-                  loading="eager"
+                  loading="lazy"
+                  decoding="async"
                 />
                 {active && (
-                  <span className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-[#c4a35a] text-sm font-bold text-white shadow-md">
+                  <span className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-[#7a5c14] text-sm font-bold text-white shadow-md">
                     ✓
                   </span>
                 )}

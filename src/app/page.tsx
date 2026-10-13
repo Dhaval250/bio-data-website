@@ -1,6 +1,14 @@
 import Header from "@/components/Header";
 import BiodataForm from "@/components/BiodataForm";
 import TemplateGallery from "@/components/TemplateGallery";
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  SITE_TITLE,
+  FAQS,
+  LANGUAGES,
+} from "@/lib/site";
 
 const shell = "mx-auto w-full max-w-[1400px] px-3 sm:px-6 lg:px-10";
 
@@ -91,10 +99,73 @@ const TIPS = [
   },
 ];
 
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/icon-512.png`, width: 512, height: 512 },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      inLanguage: "en-IN",
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    },
+    {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/#webpage`,
+      url: SITE_URL,
+      name: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+      primaryImageOfPage: { "@type": "ImageObject", url: `${SITE_URL}/opengraph-image.png` },
+    },
+    {
+      "@type": "WebApplication",
+      "@id": `${SITE_URL}/#app`,
+      name: `${SITE_NAME} – Marriage Biodata Maker`,
+      url: SITE_URL,
+      applicationCategory: "LifestyleApplication",
+      operatingSystem: "Any (web browser)",
+      browserRequirements: "Requires JavaScript",
+      inLanguage: ["en", "hi", "mr", "gu", "te", "bn"],
+      description: SITE_DESCRIPTION,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "INR", description: "Basic templates are free" },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${SITE_URL}/#faq`,
+      mainEntity: FAQS.map(([q, a]) => ({
+        "@type": "Question",
+        name: q,
+        acceptedAnswer: { "@type": "Answer", text: a },
+      })),
+    },
+  ],
+};
+
 export default function Home() {
   return (
     <div className="w-full min-w-0 overflow-x-hidden bg-[#faf8f5]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD).replace(/</g, "\\u003c") }}
+      />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-[#1c1917] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#e8d5a3]"
+      >
+        Skip to main content
+      </a>
       <Header />
+      <main id="main-content">
 
       {/* Hero */}
       <section className="hero-gradient w-full text-white">
@@ -127,7 +198,7 @@ export default function Home() {
                 View Templates
               </a>
             </div>
-            <div className="mt-6 flex flex-wrap gap-4 text-sm text-white/50">
+            <div className="mt-6 flex flex-wrap gap-4 text-sm text-white/70">
               <span>● 191,800+ Biodatas Created</span>
               <span>● 100% Free Basic Templates</span>
             </div>
@@ -255,10 +326,11 @@ export default function Home() {
           <h2 className="text-xl font-bold text-[#1c1917] sm:text-2xl">Create Biodata in Your Language</h2>
           <p className="mt-1 text-sm text-[#78716c]">Choose your language and create a beautiful marriage biodata in minutes.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {["मराठी", "हिंदी", "ગુજરાતી", "తెలుగు", "বাংলা", "English"].map((l) => (
+            {LANGUAGES.map(({ code, label: l }) => (
               <a
-                key={l}
+                key={code}
                 href="#create"
+                lang={code}
                 className="rounded-xl border border-[#e7e5e4] bg-[#faf8f5] px-5 py-3 text-sm font-medium text-[#1c1917] shadow-sm transition hover:border-[#c4a35a] hover:shadow"
               >
                 {l}
@@ -272,7 +344,7 @@ export default function Home() {
       <section id="templates" className="w-full scroll-mt-14 bg-gradient-to-b from-[#faf6eb] via-[#f0ebe3]/50 to-white py-16 sm:py-20">
         <div className={shell}>
           <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#c4a35a]">Templates</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#7a5c14]">Templates</p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#1c1917] sm:text-3xl lg:text-4xl">
               Choose Your Perfect Template
             </h2>
@@ -309,14 +381,14 @@ export default function Home() {
               >
                 <h3 className="text-base font-bold leading-snug text-[#1c1917]">{tip.title}</h3>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-600">{tip.desc}</p>
-                <a href="#create" className="mt-4 text-sm font-semibold text-[#c4a35a] hover:underline">
+                <a href="#create" className="mt-4 inline-block py-2 text-sm font-semibold text-[#7a5c14] hover:underline" aria-label={`Read more: ${tip.title}`}>
                   Read More →
                 </a>
               </article>
             ))}
           </div>
           <div className="mt-8 text-center">
-            <a href="#tips" className="text-sm font-semibold text-[#c4a35a] hover:underline">
+            <a href="#tips" className="inline-block py-2 text-sm font-semibold text-[#7a5c14] hover:underline">
               View All Articles →
             </a>
           </div>
@@ -347,7 +419,7 @@ export default function Home() {
               },
             ].map((t) => (
               <blockquote key={t.name} className="rounded-xl border border-[#e7e5e4] bg-white p-5">
-                <div className="mb-2 text-[#c4a35a]">★★★★★</div>
+                <div className="mb-2 text-[#7a5c14]" role="img" aria-label="5 out of 5 stars">★★★★★</div>
                 <p className="text-sm leading-relaxed text-[#78716c]">&ldquo;{t.quote}&rdquo;</p>
                 <footer className="mt-3 text-sm font-semibold text-[#1c1917]">
                   {t.name} <span className="font-normal text-[#78716c]">· {t.place}</span>
@@ -363,13 +435,7 @@ export default function Home() {
         <div className={`${shell} max-w-3xl`}>
           <h2 className="text-center text-xl font-bold text-[#1c1917] sm:text-2xl">Frequently Asked Questions</h2>
           <div className="mx-auto mt-8 max-w-3xl space-y-3">
-            {[
-              ["Is your biodata maker really free?", "Yes, basic templates are completely free. Premium formats (PDF/Word) are available for a small fee."],
-              ["What formats can I download?", "PDF, Word document, or high-quality image."],
-              ["What languages do you support?", "English, Hindi, Marathi, Gujarati, Telugu, and Bengali."],
-              ["Do I need to sign up?", "No registration required. Fill details and download directly."],
-              ["Is my data secure?", "Yes. Information is processed securely and not shared with third parties."],
-            ].map(([q, a]) => (
+            {FAQS.map(([q, a]) => (
               <details key={q} className="group rounded-xl border border-[#e7e5e4] bg-[#faf8f5] open:bg-white">
                 <summary className="cursor-pointer list-none px-5 py-4 text-sm font-medium text-[#1c1917]">
                   <span className="flex items-center justify-between gap-3">
@@ -390,21 +456,18 @@ export default function Home() {
           <div className="w-full max-w-lg rounded-2xl border border-[#f5d78e] bg-gradient-to-b from-[#fffbf0] to-[#fff8e7] p-6 shadow-sm sm:p-8">
             <h2 className="text-center text-xl font-bold text-[#1c1917] sm:text-2xl">
               How can we support you?
-            </h2>
-            <p className="mt-1 text-center text-sm text-stone-600">
-              किसी भी सवाल या समस्या के लिए हमसे संपर्क करें।
-            </p>
+            </h2>            
             <div className="mt-5 space-y-3">
               <a
                 href="mailto:Pankajahir526@gmail.com"
-                className="flex items-center gap-4 rounded-xl border border-[#f0e6c8] bg-white px-4 py-3.5 shadow-sm transition hover:border-[#e67e22]/40 hover:shadow-md"
+                className="flex items-center gap-4 rounded-xl border border-[#f0e6c8] bg-white px-4 py-3.5 shadow-sm transition hover:border-[#b45309]/40 hover:shadow-md"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fff3e0] text-xl">
                   ✉️
                 </span>
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-500">Email Support:</p>
-                  <p className="truncate text-sm font-semibold text-[#e67e22] sm:text-base">
+                  <p className="truncate text-sm font-semibold text-[#b45309] sm:text-base">
                     Pankajahir526@gmail.com
                   </p>
                 </div>
@@ -420,7 +483,7 @@ export default function Home() {
                 </span>
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-500">WhatsApp Support:</p>
-                  <p className="text-sm font-semibold text-[#25d366] sm:text-base">
+                  <p className="text-sm font-semibold text-[#15803d] sm:text-base">
                     +91 9773424517
                   </p>
                 </div>
@@ -469,37 +532,48 @@ export default function Home() {
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
       <footer className="w-full border-t border-[#e7e5e4] bg-[#1c1917] py-10 text-white">
         <div className={`${shell} grid gap-8 sm:grid-cols-2 lg:grid-cols-4`}>
           <div>
-            <p className="font-semibold">
-              Free<span className="text-[#c4a35a]">Biodata</span>Maker
-            </p>
-            <p className="mt-2 text-xs leading-relaxed text-white/50">
+            <div className="inline-block rounded-2xl bg-[#faf8f5] p-3 shadow-lg shadow-black/30">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-sm.webp"
+                alt="Marriage Biodata logo"
+                width={486}
+                height={354}
+                loading="lazy"
+                decoding="async"
+                className="h-auto w-36"
+              />
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-white/70">
               Free online marriage biodata maker for India. Create beautiful biodata in minutes.
             </p>
           </div>
           <div>
             <p className="text-sm font-semibold text-[#c4a35a]">Product</p>
-            <ul className="mt-2 space-y-1 text-sm text-white/60">
+            <ul className="mt-2 space-y-1 text-sm text-white/75">
               <li>
-                <a href="#create" className="hover:text-[#c4a35a]">
+                <a href="#create" className="inline-block py-1 hover:text-[#c4a35a]">
                   Create
                 </a>
               </li>
               <li>
-                <a href="#templates" className="hover:text-[#c4a35a]">
+                <a href="#templates" className="inline-block py-1 hover:text-[#c4a35a]">
                   Templates
                 </a>
               </li>
               <li>
-                <a href="#how-to" className="hover:text-[#c4a35a]">
+                <a href="#how-to" className="inline-block py-1 hover:text-[#c4a35a]">
                   How it works
                 </a>
               </li>
               <li>
-                <a href="#faq" className="hover:text-[#c4a35a]">
+                <a href="#faq" className="inline-block py-1 hover:text-[#c4a35a]">
                   FAQ
                 </a>
               </li>
@@ -507,16 +581,16 @@ export default function Home() {
           </div>
           <div>
             <p className="text-sm font-semibold text-[#c4a35a]">Languages</p>
-            <ul className="mt-2 space-y-1 text-sm text-white/60">
+            <ul className="mt-2 space-y-1 text-sm text-white/75">
               <li>English · हिंदी · मराठी</li>
               <li>ગુજરાતી · తెలుగు · বাংলা</li>
             </ul>
           </div>
           <div>
             <p className="text-sm font-semibold text-[#c4a35a]">Support</p>
-            <ul className="mt-2 space-y-1 text-sm text-white/60">
+            <ul className="mt-2 space-y-1 text-sm text-white/75">
               <li>
-                <a href="mailto:Pankajahir526@gmail.com" className="hover:text-[#c4a35a]">
+                <a href="mailto:Pankajahir526@gmail.com" className="inline-block py-1 hover:text-[#c4a35a]">
                   Email
                 </a>
               </li>
@@ -525,21 +599,21 @@ export default function Home() {
                   href="https://wa.me/919773424517"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-[#c4a35a]"
+                  className="inline-block py-1 hover:text-[#c4a35a]"
                 >
                   WhatsApp
                 </a>
               </li>
               <li>
-                <a href="#support-home" className="hover:text-[#c4a35a]">
+                <a href="#support-home" className="inline-block py-1 hover:text-[#c4a35a]">
                   Contact
                 </a>
               </li>
             </ul>
           </div>
         </div>
-        <p className="mt-8 text-center text-xs text-white/40">
-          © {new Date().getFullYear()} FreeBiodataMaker. All rights reserved.
+        <p className="mt-8 text-center text-xs text-white/70">
+          © {new Date().getFullYear()} FreeBiodata. All rights reserved.
         </p>
       </footer>
     </div>

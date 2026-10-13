@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Mukta } from "next/font/google";
 import "./globals.css";
+import { SITE_URL, SITE_NAME, SITE_TITLE, SITE_DESCRIPTION } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,39 +14,58 @@ const mukta = Mukta({
   weight: ["400", "500", "600", "700"],
   variable: "--font-mukta",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "Free Marriage Biodata Maker | PDF Download | FreeBiodataMaker",
-  description:
-    "Create a professional marriage biodata in minutes. Multi-language support. Download high-quality PDF. Free, no signup. English, Hindi, Marathi, Gujarati, Telugu, Bengali.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   keywords: [
     "free biodata maker",
     "marriage biodata",
+    "marriage biodata format",
+    "biodata for marriage PDF",
     "gujarati biodata",
     "marathi biodata",
     "hindi biodata",
-    "biodata PDF",
     "online biodata maker",
   ],
-  authors: [{ name: "FreeBiodataMaker" }],
-  robots: { index: true, follow: true },
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "lifestyle",
+  alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
   openGraph: {
-    title: "Free Marriage Biodata Maker",
-    description: "Create & download professional marriage biodata PDF. Modern templates.",
     type: "website",
+    url: "/",
+    siteName: SITE_NAME,
     locale: "en_IN",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
-  alternates: {
-    canonical: "https://freebiodatamaker.com",
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
+  formatDetection: { telephone: false, email: false, address: false },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#c4a35a",
+  themeColor: "#faf8f5",
   viewportFit: "cover",
 };
 

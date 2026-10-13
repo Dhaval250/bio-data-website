@@ -38,7 +38,7 @@ export default function TemplateCarousel({
         type="button"
         aria-label="Previous templates"
         onClick={() => scrollBy(-1)}
-        className="absolute left-1 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5a623] text-xl font-bold text-white shadow-md transition hover:bg-[#e67e22] sm:flex"
+        className="absolute left-1 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#b45309] text-xl font-bold text-white shadow-md transition hover:bg-[#92400e] sm:flex"
       >
         ‹
       </button>
@@ -69,8 +69,11 @@ export default function TemplateCarousel({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={templateImageSrc(tpl.id)}
-                  alt={tpl.name}
+                  alt={`${tpl.name} template`}
+                  width={600}
+                  height={848}
                   loading="lazy"
+                  decoding="async"
                   draggable={false}
                   className="h-full w-full object-cover object-top"
                 />
@@ -78,7 +81,7 @@ export default function TemplateCarousel({
               <p
                 className={cn(
                   "mt-2 line-clamp-2 text-xs font-semibold",
-                  active ? "text-[#e67e22]" : "text-stone-600"
+                  active ? "text-[#b45309]" : "text-stone-600"
                 )}
               >
                 {tpl.name}
@@ -92,7 +95,7 @@ export default function TemplateCarousel({
         type="button"
         aria-label="Next templates"
         onClick={() => scrollBy(1)}
-        className="absolute right-1 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#f5a623] text-xl font-bold text-white shadow-md transition hover:bg-[#e67e22] sm:flex"
+        className="absolute right-1 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#b45309] text-xl font-bold text-white shadow-md transition hover:bg-[#92400e] sm:flex"
       >
         ›
       </button>

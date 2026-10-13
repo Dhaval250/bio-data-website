@@ -35,12 +35,15 @@ export default function TemplateGallery() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={templateImageSrc(t.id)}
-              alt={t.name}
+              alt={`${t.name} marriage biodata template`}
+              width={600}
+              height={848}
               className="h-full max-h-full w-full object-contain object-center transition duration-300 group-hover:scale-[1.02]"
-              loading="eager"
+              loading="lazy"
+              decoding="async"
             />
             {t.id === "elegant-profile" ? (
-              <span className="absolute right-3 top-3 rounded-md bg-[#c4a35a] px-2.5 py-1 text-[11px] font-bold text-white shadow">
+              <span className="absolute right-3 top-3 rounded-md bg-[#7a5c14] px-2.5 py-1 text-[11px] font-bold text-white shadow">
                 Classic
               </span>
             ) : (

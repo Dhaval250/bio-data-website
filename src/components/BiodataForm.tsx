@@ -55,7 +55,7 @@ const OPTIONAL_CHIPS = [
 ] as const;
 
 const fieldClass =
-  "w-full min-h-[44px] max-w-full rounded-xl border border-[#e8e0d4] bg-white px-3 py-2.5 text-base text-[#1c1917] shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none transition placeholder:text-[#a8a29e] focus:border-[#c4a35a] focus:shadow-[0_0_0_3px_rgba(196,163,90,0.18)] sm:min-h-[42px] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm touch-manipulation appearance-none";
+  "w-full min-h-[44px] max-w-full rounded-xl border border-[#e8e0d4] bg-white px-3 py-2.5 text-base text-[#1c1917] shadow-[0_1px_2px_rgba(28,25,23,0.04)] outline-none transition placeholder:text-[#78716c] focus:border-[#c4a35a] focus:shadow-[0_0_0_3px_rgba(196,163,90,0.18)] sm:min-h-[42px] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm touch-manipulation appearance-none";
 
 const SESSION_KEY = "fbm-biodata-session-v1";
 
@@ -271,7 +271,7 @@ function FieldRow({
   };
 
   const btnIcon =
-    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e8e0d4] bg-[#faf8f5] text-[#9a7b3c] transition active:scale-95 disabled:opacity-25 touch-manipulation sm:h-8 sm:w-8";
+    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e8e0d4] bg-[#faf8f5] text-[#7a5c14] transition active:scale-95 disabled:opacity-25 touch-manipulation sm:h-8 sm:w-8";
 
   return (
     <div className="w-full max-w-full overflow-hidden rounded-xl border border-[#ebe4d8] bg-white p-3 shadow-[0_1px_4px_rgba(28,25,23,0.04)] sm:rounded-2xl sm:p-4">
@@ -281,6 +281,7 @@ function FieldRow({
           {editingLabel ? (
             <input
               autoFocus
+              aria-label="Field label"
               className="min-w-0 flex-1 rounded-lg border border-[#c4a35a] bg-white px-2 py-1.5 text-base font-semibold text-stone-800 outline-none focus:ring-2 focus:ring-[#c4a35a]/20 sm:text-sm"
               value={field.label}
               onChange={(e) => onChange(field.id, { label: e.target.value })}
@@ -292,26 +293,27 @@ function FieldRow({
               <span className="truncate text-[13px] font-semibold leading-tight text-stone-700 sm:text-sm">
                 {field.label}
                 {(field.required || field.key === "fullName") && (
-                  <span className="text-[#c4a35a]"> *</span>
+                  <span className="text-[#7a5c14]" aria-hidden="true"> *</span>
                 )}
               </span>
               <button
                 type="button"
                 title="Edit label"
+                aria-label={`Edit label: ${field.label}`}
                 onClick={() => setEditingLabel(true)}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-stone-400 touch-manipulation hover:bg-[#faf6eb] hover:text-[#c4a35a] sm:h-7 sm:w-7"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-stone-400 touch-manipulation hover:bg-[#faf6eb] hover:text-[#7a5c14] sm:h-7 sm:w-7"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </button>
               {translating && (
-                <span className="text-[10px] font-medium text-[#9a7b3c]">…</span>
+                <span className="text-[10px] font-medium text-[#7a5c14]">…</span>
               )}
             </>
           )}
         </div>
-        <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-[11px] font-medium text-[#9a7b3c] touch-manipulation sm:text-xs">
+        <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-[11px] font-medium text-[#7a5c14] touch-manipulation sm:text-xs">
           <input
             type="checkbox"
             checked={field.include}
@@ -327,6 +329,7 @@ function FieldRow({
         <div className="min-w-0 flex-1">
           {field.type === "select" ? (
             <select
+              aria-label={field.label}
               className={cn(fieldClass, "pr-8")}
               value={field.value}
               data-field-key={field.key}
@@ -348,6 +351,7 @@ function FieldRow({
             </select>
           ) : field.type === "textarea" ? (
             <textarea
+              aria-label={field.label}
               className={cn(fieldClass, "min-h-[80px] resize-y")}
               value={field.value}
               onChange={(e) => onChange(field.id, { value: e.target.value })}
@@ -357,6 +361,7 @@ function FieldRow({
             />
           ) : (
             <input
+              aria-label={field.label}
               type={field.type === "date" ? "date" : "text"}
               className={cn(
                 fieldClass,
@@ -1033,8 +1038,9 @@ export default function BiodataForm() {
                 {/* Title + God + Mantra — aligned row */}
                 <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-stone-600">{t(lang, "title")}</label>
+                    <label htmlFor="biodata-title" className="mb-1.5 block text-xs font-semibold text-stone-600">{t(lang, "title")}</label>
                     <input
+                      id="biodata-title"
                       className={fieldClass}
                       value={data.biodataTitle || ""}
                       onChange={(e) => update("biodataTitle", e.target.value)}
@@ -1049,13 +1055,14 @@ export default function BiodataForm() {
                     <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#f0ebe3] to-[#f0ebe3]/30 text-3xl ring-2 ring-[#f0ebe3]">
                       {data.godImage || "🕉️"}
                     </span>
-                    <span className="text-xs font-semibold text-[#9a7b3c] underline">
+                    <span className="text-xs font-semibold text-[#7a5c14] underline">
                       {t(lang, "changeGod")}
                     </span>
                   </button>
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-stone-600">{t(lang, "mantra")}</label>
+                    <label htmlFor="biodata-mantra" className="mb-1.5 block text-xs font-semibold text-stone-600">{t(lang, "mantra")}</label>
                     <input
+                      id="biodata-mantra"
                       className={fieldClass}
                       value={data.mantra || ""}
                       onChange={(e) => update("mantra", e.target.value)}
@@ -1068,7 +1075,7 @@ export default function BiodataForm() {
                 <div className="rounded-xl border border-dashed border-[#c4a35a]/70 bg-gradient-to-br from-[#f0ebe3]/30/80 to-stone-50 p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <p className="text-sm font-semibold text-stone-700">{t(lang, "choosePhoto")}</p>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#9a7b3c] ring-1 ring-[#e7e5e4]">
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#7a5c14] ring-1 ring-[#e7e5e4]">
                       {(data.photoDataUrls || (data.photoDataUrl ? [data.photoDataUrl] : [])).length}/3
                     </span>
                   </div>
@@ -1085,7 +1092,7 @@ export default function BiodataForm() {
                         {index === 0 ? (
                           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-[#1c1917] px-2 py-0.5 text-[9px] font-bold text-white">Primary</span>
                         ) : (
-                          <button type="button" onClick={() => setPrimaryPhoto(index)} className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[9px] font-semibold text-[#9a7b3c] shadow ring-1 ring-[#e7e5e4]">Use primary</button>
+                          <button type="button" onClick={() => setPrimaryPhoto(index)} className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-[9px] font-semibold text-[#7a5c14] shadow ring-1 ring-[#e7e5e4]">Use primary</button>
                         )}
                         <button type="button" aria-label={`Remove photo ${index + 1}`} onClick={() => removePhoto(index)} className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white shadow">×</button>
                       </div>
@@ -1101,7 +1108,7 @@ export default function BiodataForm() {
                         type="button"
                         onClick={() => fileRef.current?.click()}
                         disabled={(data.photoDataUrls || (data.photoDataUrl ? [data.photoDataUrl] : [])).length >= 3}
-                        className="rounded-lg bg-[#c4a35a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1c1917] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-lg bg-[#7a5c14] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1c1917] disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {t(lang, "upload")} photos
                       </button>
@@ -1190,7 +1197,7 @@ export default function BiodataForm() {
                             "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
                             added
                               ? "border-stone-200 bg-stone-100 text-stone-400"
-                              : "border-[#c4a35a] bg-white text-[#9a7b3c] hover:bg-[#faf6eb]"
+                              : "border-[#c4a35a] bg-white text-[#7a5c14] hover:bg-[#faf6eb]"
                           )}
                         >
                           + {fieldLabel(lang, chip.key)}
@@ -1205,7 +1212,7 @@ export default function BiodataForm() {
               <button
                 type="button"
                 onClick={() => addField(currentSection)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#c4a35a] bg-[#faf6eb]/40 py-3 text-sm font-semibold text-[#9a7b3c] transition hover:bg-[#faf6eb]"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#c4a35a] bg-[#faf6eb]/40 py-3 text-sm font-semibold text-[#7a5c14] transition hover:bg-[#faf6eb]"
               >
                 <span className="text-lg leading-none">+</span>
                 {t(lang, "addField")}
@@ -1268,7 +1275,7 @@ export default function BiodataForm() {
                 <button
                   type="button"
                   onClick={next}
-                  className="min-h-[48px] w-full rounded-xl bg-gradient-to-r from-[#c4a35a] to-[#9a7b3c] px-6 py-3 text-sm font-bold text-white shadow-md touch-manipulation hover:from-[#9a7b3c] hover:to-[#c4a35a] sm:w-auto sm:py-2.5"
+                  className="min-h-[48px] w-full rounded-xl bg-[#7a5c14] px-6 py-3 text-sm font-bold text-white shadow-md touch-manipulation hover:bg-[#654a0f] sm:w-auto sm:py-2.5"
                 >
                   {step < 2 ? t(lang, "nextStep") : t(lang, "previewBiodata")}
                 </button>
@@ -1321,7 +1328,7 @@ export default function BiodataForm() {
             Having trouble downloading or accessing an older biodata?{" "}
             <a
               href="#support"
-              className="font-semibold text-[#e67e22] underline-offset-2 hover:underline"
+              className="font-semibold text-[#b45309] underline-offset-2 hover:underline"
             >
               Click here
             </a>
@@ -1335,10 +1342,6 @@ export default function BiodataForm() {
             <h3 className="text-center text-xl font-bold text-[#1c1917] sm:text-2xl">
               How can we support you?
             </h3>
-            <p className="mt-1 text-center text-sm text-stone-600">
-              किसी भी सवाल या समस्या के लिए हमसे संपर्क करें।
-            </p>
-
             <div className="mt-5 space-y-3">
               <a
                 href="mailto:Pankajahir526@gmail.com"
@@ -1349,7 +1352,7 @@ export default function BiodataForm() {
                 </span>
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-500">Email Support:</p>
-                  <p className="truncate text-sm font-semibold text-[#e67e22] sm:text-base">
+                  <p className="truncate text-sm font-semibold text-[#b45309] sm:text-base">
                     Pankajahir526@gmail.com
                   </p>
                 </div>
@@ -1366,7 +1369,7 @@ export default function BiodataForm() {
                 </span>
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-500">WhatsApp Support:</p>
-                  <p className="text-sm font-semibold text-[#25d366] sm:text-base">
+                  <p className="text-sm font-semibold text-[#15803d] sm:text-base">
                     +91 9773424517
                   </p>
                 </div>
