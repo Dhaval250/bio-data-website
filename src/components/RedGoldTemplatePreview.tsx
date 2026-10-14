@@ -2,6 +2,7 @@
 
 import { forwardRef, useEffect, useRef, useState, type CSSProperties } from "react";
 import { BiodataFormData } from "@/lib/types";
+import { rowLabel, sectionTitle } from "@/lib/i18n";
 
 interface Props {
   data: BiodataFormData;
@@ -52,31 +53,31 @@ const RedGoldTemplatePreview = forwardRef<HTMLDivElement, Props>(function RedGol
   const sisters = customValue(data, ["No. Of Sister", "No. of Sister", "Sisters", "Sister"]);
 
   const personalRows = [
-    ["Date of Birth", data.dob],
-    ["Place of Birth", data.nativePlace],
-    ["Rashi", data.rashi],
-    ["Religion", religionLabel(data.religion)],
-    ["Caste", data.caste],
+    [rowLabel(data.language, "dob", "Date of Birth"), data.dob],
+    [rowLabel(data.language, "nativePlace", "Place of Birth"), data.nativePlace],
+    [rowLabel(data.language, "rashi", "Rashi"), data.rashi],
+    [rowLabel(data.language, "religion", "Religion"), religionLabel(data.religion)],
+    [rowLabel(data.language, "caste", "Caste"), data.caste],
     ["Sub Caste", subCaste],
-    ["Gotra", data.gotra],
+    [rowLabel(data.language, "gotra", "Gotra"), data.gotra],
     ["Complexion", complexion],
-    ["Height", data.height],
-    ["Education", data.education],
-    ["Occupation", data.occupation],
+    [rowLabel(data.language, "height", "Height"), data.height],
+    [rowLabel(data.language, "education", "Education"), data.education],
+    [rowLabel(data.language, "occupation", "Occupation"), data.occupation],
   ].filter(([, value]) => value && String(value).trim()) as [string, string][];
 
   const familyRows = [
-    ["Father's Name", data.fatherName],
-    ["Occupation", data.fatherOccupation],
-    ["Mother's Name", data.motherName],
-    ["Occupation", data.motherOccupation],
+    [rowLabel(data.language, "fatherName", "Father's Name"), data.fatherName],
+    [rowLabel(data.language, "fatherOccupation", "Occupation"), data.fatherOccupation],
+    [rowLabel(data.language, "motherName", "Mother's Name"), data.motherName],
+    [rowLabel(data.language, "motherOccupation", "Occupation"), data.motherOccupation],
     ["No. Of Brother", brothers || (!sisters && data.siblings ? data.siblings : "")],
     ["No. Of Sister", sisters],
   ].filter(([, value]) => value && String(value).trim()) as [string, string][];
 
   const contactRows = [
-    ["Phone no.", data.phone],
-    ["Address", data.address],
+    [rowLabel(data.language, "phone", "Phone no."), data.phone],
+    [rowLabel(data.language, "address", "Address"), data.address],
   ].filter(([, value]) => value && String(value).trim()) as [string, string][];
 
   useEffect(() => {
@@ -183,8 +184,8 @@ const RedGoldTemplatePreview = forwardRef<HTMLDivElement, Props>(function RedGol
         >
           <div style={{ display: "flex", flexDirection: "column", gap: "2.0cqw" }}>
             {section(null, personalRows)}
-            {familyRows.length > 0 && section("Family Details", familyRows)}
-            {contactRows.length > 0 && section("Contact Details", contactRows)}
+            {familyRows.length > 0 && section(sectionTitle(data.language, "familyDetails", "Family Details"), familyRows)}
+            {contactRows.length > 0 && section(sectionTitle(data.language, "contactDetails", "Contact Details"), contactRows)}
           </div>
         </div>
 

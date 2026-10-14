@@ -7,6 +7,7 @@ import TemplateCarousel from "./TemplateCarousel";
 import BiodataPreview from "./BiodataPreview";
 import PreviewProtection from "./PreviewProtection";
 import ExtraPhotosPreview from "./ExtraPhotosPreview";
+import { translateKnown } from "@/lib/valueDictionary";
 import { cn } from "@/lib/utils";
 import { savePhotos, loadPhotos, clearPhotos } from "@/lib/photoStore";
 
@@ -192,6 +193,13 @@ const initialData: BiodataFormData = {
 
 const STEP_KEYS = ["stepInfo", "stepFamily", "stepContact"] as const;
 
+/** Data keys that are backed by a form row (see the default field lists) */
+const ROW_DATA_KEYS = [
+  "dob", "gender", "height", "nativePlace", "religion", "caste", "education", "occupation",
+  "fatherName", "fatherOccupation", "motherName", "motherOccupation", "siblings",
+  "phone", "email", "address", "rashi", "nakshatra", "gotra", "manglik",
+] as const;
+
 /** Fields that should never be auto-translated */
 const SKIP_TRANSLATE_KEYS = new Set([
   "dob",
@@ -200,21 +208,6 @@ const SKIP_TRANSLATE_KEYS = new Set([
   "phone",
   "email",
 ]);
-
-/** Latin letters → likely English (or romanized) text worth translating */
-function looksLatin(text: string): boolean {
-  return /[A-Za-z]{2,}/.test(text);
-}
-
-/** Detect script to pick API source language */
-function detectScriptLang(text: string, fallback: Language = "en"): Language {
-  if (/[\u0A80-\u0AFF]/.test(text)) return "gu"; // Gujarati
-  if (/[\u0900-\u097F]/.test(text)) return "hi"; // Devanagari (hi/mr)
-  if (/[\u0C00-\u0C7F]/.test(text)) return "te"; // Telugu
-  if (/[\u0980-\u09FF]/.test(text)) return "bn"; // Bengali
-  if (looksLatin(text)) return "en";
-  return fallback;
-}
 
 /** Field row: label + Include + input + up/down — aligned like original */
 function FieldRow({
@@ -241,33 +234,16 @@ function FieldRow({
   onTranslateValue?: (id: string, value: string) => void;
 }) {
   const [editingLabel, setEditingLabel] = useState(false);
-  const [translating, setTranslating] = useState(false);
 
-  const tryAutoTranslate = async () => {
+  /** Only converts well-known answers (Hindu, Farmer, Kanya ...). Everything else stays as typed. */
+  const tryAutoTranslate = () => {
     if (!onTranslateValue) return;
-    if (language === "en") return;
     if (SKIP_TRANSLATE_KEYS.has(field.key)) return;
     if (field.type === "date" || field.type === "select") return;
     const v = field.value?.trim();
-    if (!v || !looksLatin(v)) return;
-
-    setTranslating(true);
-    try {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: v, from: "en", to: language }),
-      });
-      const data = await res.json();
-      const translated = String(data?.translated || "").trim();
-      if (translated && translated !== v) {
-        onTranslateValue(field.id, translated);
-      }
-    } catch {
-      // keep original on failure
-    } finally {
-      setTranslating(false);
-    }
+    if (!v) return;
+    const converted = translateKnown(v, language);
+    if (converted && converted !== v) onTranslateValue(field.id, converted);
   };
 
   const btnIcon =
@@ -307,9 +283,6 @@ function FieldRow({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </button>
-              {translating && (
-                <span className="text-[10px] font-medium text-[#7a5c14]">…</span>
-              )}
             </>
           )}
         </div>
@@ -318,15 +291,15 @@ function FieldRow({
             type="checkbox"
             checked={field.include}
             onChange={(e) => onChange(field.id, { include: e.target.checked })}
-            className="h-4 w-4 rounded border-[#c4a35a] text-[#c4a35a] focus:ring-[#c4a35a]"
+            className="h-5 w-5 rounded border-[#c4a35a] accent-[#7a5c14] focus:ring-[#c4a35a]"
           />
-          <span className="hidden xs:inline sm:inline">{includeText}</span>
+          <span>{includeText}</span>
         </label>
       </div>
 
       {/* Row 2: Input full width + actions on same line for sm+ */}
       <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="min-w-0 flex-1">
+        <div className={cn("min-w-0 flex-1 transition-opacity", !field.include && "opacity-50")}>
           {field.type === "select" ? (
             <select
               aria-label={field.label}
@@ -355,7 +328,7 @@ function FieldRow({
               className={cn(fieldClass, "min-h-[80px] resize-y")}
               value={field.value}
               onChange={(e) => onChange(field.id, { value: e.target.value })}
-              onBlur={() => void tryAutoTranslate()}
+              onBlur={tryAutoTranslate}
               placeholder={field.placeholder}
               rows={3}
             />
@@ -371,7 +344,7 @@ function FieldRow({
               value={field.value}
               data-field-key={field.key}
               onChange={(e) => onChange(field.id, { value: e.target.value })}
-              onBlur={() => void tryAutoTranslate()}
+              onBlur={tryAutoTranslate}
               placeholder={field.placeholder}
               autoComplete={field.key === "fullName" ? "name" : "off"}
             />
@@ -574,51 +547,16 @@ export default function BiodataForm() {
     });
   }, []);
 
-  /** Translate field value between languages via API */
-  const translateText = useCallback(
-    async (text: string, to: Language, fromLang?: Language) => {
-      const value = (text || "").trim();
-      if (!value) return text;
-      if (to === fromLang) return text;
-      // Skip pure numbers / dates / phones
-      if (/^[\d\s+\-/.()]+$/.test(value)) return text;
-
-      const from = fromLang || detectScriptLang(value, "en");
-      if (from === to) return text;
-
-      try {
-        const res = await fetch("/api/translate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: value, from, to }),
-        });
-        const data = await res.json();
-        const translated = String(data?.translated || "").trim();
-        return translated || text;
-      } catch {
-        return text;
-      }
-    },
-    []
-  );
-
-  const translateFieldList = useCallback(
-    async (list: FormFieldRow[], to: Language, fromLang: Language) => {
-      const next = await Promise.all(
-        list.map(async (f) => {
-          const labeled = applyLangToFields([f], to)[0];
-          if (SKIP_TRANSLATE_KEYS.has(f.key) || f.type === "date" || f.type === "select") {
-            return labeled;
-          }
-          const v = (f.value || "").trim();
-          if (!v) return labeled;
-          const translated = await translateText(v, to, fromLang);
-          return { ...labeled, value: translated };
-        })
-      );
-      return next;
-    },
-    [applyLangToFields, translateText]
+  /** Re-label fields and convert well-known answers; typed names/places are never touched. */
+  const convertFields = useCallback(
+    (list: FormFieldRow[], to: Language) =>
+      list.map((f) => {
+        const labeled = applyLangToFields([f], to)[0];
+        if (SKIP_TRANSLATE_KEYS.has(f.key) || f.type === "date" || f.type === "select") return labeled;
+        const converted = translateKnown(f.value || "", to);
+        return converted ? { ...labeled, value: converted } : labeled;
+      }),
+    [applyLangToFields]
   );
 
   const setLanguage = useCallback(
@@ -626,67 +564,29 @@ export default function BiodataForm() {
       const fromLang = (data.language as Language) || "en";
       if (fromLang === next) return;
 
-      // Labels now + translate VALUES in background
-      setPersonalFields((prev) => {
-        void translateFieldList(prev, next, fromLang).then(setPersonalFields);
-        return applyLangToFields(prev, next);
-      });
-      setFamilyFields((prev) => {
-        void translateFieldList(prev, next, fromLang).then(setFamilyFields);
-        return applyLangToFields(prev, next);
-      });
-      setContactFields((prev) => {
-        void translateFieldList(prev, next, fromLang).then(setContactFields);
-        return applyLangToFields(prev, next);
-      });
+      setPersonalFields((prev) => convertFields(prev, next));
+      setFamilyFields((prev) => convertFields(prev, next));
+      setContactFields((prev) => convertFields(prev, next));
 
-      // 3) Title + Mantra
+      // Title + Mantra: swap only the untouched defaults
       setData((prev) => {
         const defaultEnTitle = "Biodata";
         const defaultEnMantra = "|| Shri Ganeshaya Namah ||";
-        const nextDefaultTitle = t(next, "defaultTitle") || defaultEnTitle;
-        const nextDefaultMantra = t(next, "defaultMantra") || defaultEnMantra;
-        const prevDefaultTitle =
-          t(fromLang, "defaultTitle") || defaultEnTitle;
-        const prevDefaultMantra =
-          t(fromLang, "defaultMantra") || defaultEnMantra;
-
-        let title = prev.biodataTitle || defaultEnTitle;
-        let mantra = prev.mantra || defaultEnMantra;
-
-        const isDefaultTitle =
-          !title.trim() ||
-          title.trim() === defaultEnTitle ||
-          title.trim() === prevDefaultTitle;
-        const isDefaultMantra =
-          !mantra.trim() ||
-          mantra.trim() === defaultEnMantra ||
-          mantra.trim() === prevDefaultMantra;
-
-        if (isDefaultTitle) {
-          title = nextDefaultTitle;
-        } else {
-          void translateText(title, next, fromLang).then((tr) => {
-            if (tr) setData((p) => ({ ...p, biodataTitle: tr }));
-          });
-        }
-        if (isDefaultMantra) {
-          mantra = nextDefaultMantra;
-        } else {
-          void translateText(mantra, next, fromLang).then((tr) => {
-            if (tr) setData((p) => ({ ...p, mantra: tr }));
-          });
-        }
-
+        const prevDefaultTitle = t(fromLang, "defaultTitle") || defaultEnTitle;
+        const prevDefaultMantra = t(fromLang, "defaultMantra") || defaultEnMantra;
+        const title = (prev.biodataTitle || "").trim();
+        const mantra = (prev.mantra || "").trim();
+        const isDefaultTitle = !title || title === defaultEnTitle || title === prevDefaultTitle;
+        const isDefaultMantra = !mantra || mantra === defaultEnMantra || mantra === prevDefaultMantra;
         return {
           ...prev,
           language: next,
-          biodataTitle: title,
-          mantra,
+          biodataTitle: isDefaultTitle ? t(next, "defaultTitle") || defaultEnTitle : prev.biodataTitle,
+          mantra: isDefaultMantra ? t(next, "defaultMantra") || defaultEnMantra : prev.mantra,
         };
       });
     },
-    [applyLangToFields, translateFieldList, translateText, data.language]
+    [convertFields, data.language]
   );
 
   // Keep labels in sync on first mount for default language
@@ -843,6 +743,8 @@ export default function BiodataForm() {
   const buildDataFromFields = useCallback((): BiodataFormData => {
     const all = [...personalFields, ...familyFields, ...contactFields];
     const next: BiodataFormData = { ...data };
+    // Reset every value that has a form row, so unchecked or deleted rows vanish from the preview
+    for (const k of ROW_DATA_KEYS) (next as unknown as Record<string, unknown>)[k] = "";
     const customs: BiodataFormData["customFields"] = [];
     const fieldOrder: NonNullable<BiodataFormData["fieldOrder"]> = { personal: [], family: [], contact: [] };
 
@@ -1023,6 +925,7 @@ export default function BiodataForm() {
                       key={l.id}
                       type="button"
                       onClick={() => setLanguage(l.id as Language)}
+                      aria-pressed={data.language === l.id}
                       className={cn(
                         "rounded-full px-3 py-1.5 text-xs font-medium transition",
                         data.language === l.id
@@ -1034,6 +937,12 @@ export default function BiodataForm() {
                     </button>
                   ))}
                 </div>
+                {data.language !== "en" && (
+                  <p className="-mt-3 text-xs text-stone-600">
+                    Tip: type names and places with your own language keyboard. Only common answers
+                    (Hindu, Farmer, Kanya, B+ ...) are converted automatically.
+                  </p>
+                )}
 
                 {/* Title + God + Mantra — aligned row */}
                 <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
@@ -1342,6 +1251,10 @@ export default function BiodataForm() {
             <h3 className="text-center text-xl font-bold text-[#1c1917] sm:text-2xl">
               How can we support you?
             </h3>
+            <p className="mt-1 text-center text-sm text-stone-600">
+              किसी भी सवाल या समस्या के लिए हमसे संपर्क करें।
+            </p>
+
             <div className="mt-5 space-y-3">
               <a
                 href="mailto:Pankajahir526@gmail.com"

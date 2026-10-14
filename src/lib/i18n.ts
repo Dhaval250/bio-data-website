@@ -588,3 +588,18 @@ export function fieldPlaceholder(lang: Language, key: string): string {
   if (ph && ph !== `ph_${key}`) return ph;
   return t(lang, "enterValue");
 }
+
+/**
+ * Label for a preview row. English keeps the template's own wording ("Higher Education");
+ * other languages use the translation table so labels match the selected language.
+ */
+export function rowLabel(lang: Language | undefined, key: string, fallback: string): string {
+  if (!lang || lang === "en") return fallback;
+  const v = TABLES[lang]?.[key];
+  return v && v !== key ? v : fallback;
+}
+
+/** Section heading ("Family Details" ...) in the selected language. */
+export function sectionTitle(lang: Language | undefined, key: string, fallback: string): string {
+  return rowLabel(lang, key, fallback);
+}

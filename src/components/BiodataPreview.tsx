@@ -2,6 +2,7 @@
 
 import { forwardRef } from "react";
 import { BiodataFormData } from "@/lib/types";
+import { rowLabel, sectionTitle } from "@/lib/i18n";
 import { getTemplate, getArtLayout } from "@/lib/templates";
 import TemplateArtPreview from "./TemplateArtPreview";
 import RedGoldTemplatePreview from "./RedGoldTemplatePreview";
@@ -137,37 +138,37 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
           {/* Two columns on sm+, stacked on mobile — no empty stretch */}
           <div className="mt-4 grid grid-cols-1 content-start gap-4 sm:mt-5 sm:grid-cols-2 sm:gap-6">
             <div className="flex flex-col gap-0.5">
-              <SectionBar icon="👤" title="PERSONAL DETAILS" />
-              <Line label="Name" value={data.fullName} />
-              <Line label="Date of Birth" value={data.dob} />
-              <Line label="Gender" value={data.gender} />
-              <Line label="Place of Birth" value={data.nativePlace} />
-              <Line label="Height" value={data.height} />
-              <Line label="Religion" value={data.religion} />
-              <Line label="Caste" value={data.caste} />
-              <Line label="Rashi" value={data.rashi} />
-              <Line label="Nakshatra" value={data.nakshatra} />
-              <Line label="Gotra" value={data.gotra} />
-              <Line label="Manglik" value={data.manglik} />
+              <SectionBar icon="👤" title={sectionTitle(data.language, "personalDetails", "PERSONAL DETAILS")} />
+              <Line label={rowLabel(data.language, "fullName", "Name")} value={data.fullName} />
+              <Line label={rowLabel(data.language, "dob", "Date of Birth")} value={data.dob} />
+              <Line label={rowLabel(data.language, "gender", "Gender")} value={data.gender} />
+              <Line label={rowLabel(data.language, "nativePlace", "Place of Birth")} value={data.nativePlace} />
+              <Line label={rowLabel(data.language, "height", "Height")} value={data.height} />
+              <Line label={rowLabel(data.language, "religion", "Religion")} value={data.religion} />
+              <Line label={rowLabel(data.language, "caste", "Caste")} value={data.caste} />
+              <Line label={rowLabel(data.language, "rashi", "Rashi")} value={data.rashi} />
+              <Line label={rowLabel(data.language, "nakshatra", "Nakshatra")} value={data.nakshatra} />
+              <Line label={rowLabel(data.language, "gotra", "Gotra")} value={data.gotra} />
+              <Line label={rowLabel(data.language, "manglik", "Manglik")} value={data.manglik} />
 
-              <SectionBar icon="🎓" title="EDUCATION" />
-              <Line label="Highest Qualification" value={data.education} />
+              <SectionBar icon="🎓" title={sectionTitle(data.language, "education", "EDUCATION")} />
+              <Line label={rowLabel(data.language, "education", "Highest Qualification")} value={data.education} />
 
-              <SectionBar icon="💼" title="OCCUPATION" />
-              <Line label="Profession" value={data.occupation} />
+              <SectionBar icon="💼" title={sectionTitle(data.language, "occupation", "OCCUPATION")} />
+              <Line label={rowLabel(data.language, "occupation", "Profession")} value={data.occupation} />
 
-              <SectionBar icon="🏠" title="ADDRESS" />
-              <Line label="Present Address" value={data.address} />
+              <SectionBar icon="🏠" title={sectionTitle(data.language, "address", "ADDRESS")} />
+              <Line label={rowLabel(data.language, "address", "Present Address")} value={data.address} />
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <SectionBar icon="👨‍👩‍👧" title="FAMILY DETAILS" />
-              <Line label="Father's Name" value={data.fatherName} />
-              <Line label="Mother's Name" value={data.motherName} />
-              <Line label="Father's Occupation" value={data.fatherOccupation} />
-              <Line label="Mother's Occupation" value={data.motherOccupation} />
-              <Line label="Siblings (Brothers/Sisters)" value={data.siblings} />
-              <Line label="Family Background" value={data.familyDetails} />
+              <SectionBar icon="👨‍👩‍👧" title={sectionTitle(data.language, "familyDetails", "FAMILY DETAILS")} />
+              <Line label={rowLabel(data.language, "fatherName", "Father's Name")} value={data.fatherName} />
+              <Line label={rowLabel(data.language, "motherName", "Mother's Name")} value={data.motherName} />
+              <Line label={rowLabel(data.language, "fatherOccupation", "Father's Occupation")} value={data.fatherOccupation} />
+              <Line label={rowLabel(data.language, "motherOccupation", "Mother's Occupation")} value={data.motherOccupation} />
+              <Line label={rowLabel(data.language, "siblings", "Siblings (Brothers/Sisters)")} value={data.siblings} />
+              <Line label={rowLabel(data.language, "familyDetails", "Family Background")} value={data.familyDetails} />
 
               {data.partnerPreferences?.trim() && (
                 <>
@@ -234,18 +235,18 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
             <div className="flex gap-3">
               <div className="min-w-0 flex-1 space-y-1 text-[12px]">
                 {[
-                  ["Name", data.fullName],
-                  ["Date of Birth", data.dob],
-                  ["Height", data.height],
-                  ["Religion", data.religion],
-                  ["Caste", data.caste],
-                  ["Education", data.education],
-                  ["Occupation", data.occupation],
-                  ["Father", data.fatherName],
-                  ["Mother", data.motherName],
-                  ["Mobile", data.phone],
-                  ["Email", data.email],
-                  ["Address", data.address],
+                  [rowLabel(data.language, "fullName", "Name"), data.fullName],
+                  [rowLabel(data.language, "dob", "Date of Birth"), data.dob],
+                  [rowLabel(data.language, "height", "Height"), data.height],
+                  [rowLabel(data.language, "religion", "Religion"), data.religion],
+                  [rowLabel(data.language, "caste", "Caste"), data.caste],
+                  [rowLabel(data.language, "education", "Education"), data.education],
+                  [rowLabel(data.language, "occupation", "Occupation"), data.occupation],
+                  [rowLabel(data.language, "fatherName", "Father"), data.fatherName],
+                  [rowLabel(data.language, "motherName", "Mother"), data.motherName],
+                  [rowLabel(data.language, "phone", "Mobile"), data.phone],
+                  [rowLabel(data.language, "email", "Email"), data.email],
+                  [rowLabel(data.language, "address", "Address"), data.address],
                 ]
                   .filter(([, v]) => v && String(v).trim())
                   .map(([l, v]) => (
@@ -290,13 +291,13 @@ const BiodataPreview = forwardRef<HTMLDivElement, Props>(function BiodataPreview
       <div className="flex gap-4 p-5" style={{ background: template.headerBg }}>
         <div className="min-w-0 flex-1 space-y-2 text-sm">
           {[
-            ["Name", data.fullName],
-            ["DOB", data.dob],
-            ["Height", data.height],
-            ["Education", data.education],
-            ["Work", data.occupation],
-            ["Phone", data.phone],
-            ["Email", data.email],
+            [rowLabel(data.language, "fullName", "Name"), data.fullName],
+            [rowLabel(data.language, "dob", "DOB"), data.dob],
+            [rowLabel(data.language, "height", "Height"), data.height],
+            [rowLabel(data.language, "education", "Education"), data.education],
+            [rowLabel(data.language, "occupation", "Work"), data.occupation],
+            [rowLabel(data.language, "phone", "Phone"), data.phone],
+            [rowLabel(data.language, "email", "Email"), data.email],
           ]
             .filter(([, v]) => v)
             .map(([l, v]) => (

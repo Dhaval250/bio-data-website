@@ -456,7 +456,10 @@ export default function Home() {
           <div className="w-full max-w-lg rounded-2xl border border-[#f5d78e] bg-gradient-to-b from-[#fffbf0] to-[#fff8e7] p-6 shadow-sm sm:p-8">
             <h2 className="text-center text-xl font-bold text-[#1c1917] sm:text-2xl">
               How can we support you?
-            </h2>            
+            </h2>
+            <p lang="hi" className="mt-1 text-center text-sm text-stone-600">
+              किसी भी सवाल या समस्या के लिए हमसे संपर्क करें।
+            </p>
             <div className="mt-5 space-y-3">
               <a
                 href="mailto:Pankajahir526@gmail.com"
@@ -613,7 +616,7 @@ export default function Home() {
           </div>
         </div>
         <p className="mt-8 text-center text-xs text-white/70">
-          © {new Date().getFullYear()} FreeBiodata. All rights reserved.
+          © {new Date().getFullYear()} FreeBiodataMaker. All rights reserved.
         </p>
       </footer>
     </div>

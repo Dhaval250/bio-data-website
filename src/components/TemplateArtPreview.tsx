@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { BiodataFormData } from "@/lib/types";
+import { rowLabel, sectionTitle } from "@/lib/i18n";
 import { getArtLayout } from "@/lib/templates";
 import { orderedRows } from "@/lib/orderedRows";
 
@@ -52,31 +53,31 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
 
   type Row = [string, string | undefined];
   const personal: Row[] = orderedRows(data, "personal", [
-    { key: "fullName", label: "Full Name", value: data.fullName },
-    { key: "dob", label: "Date of Birth", value: data.dob },
-    { key: "height", label: "Height", value: data.height },
-    { key: "nativePlace", label: "Place of Birth", value: data.nativePlace },
-    { key: "religion", label: "Religion", value: data.religion },
-    { key: "caste", label: "Caste", value: data.caste },
-    { key: "rashi", label: "Zodiac Sign", value: data.rashi },
-    { key: "nakshatra", label: "Nakshatra", value: data.nakshatra },
-    { key: "manglik", label: "Manglik", value: data.manglik },
-    { key: "gotra", label: "Gotra", value: data.gotra },
-    { key: "education", label: "Higher Education", value: data.education },
-    { key: "occupation", label: "Occupation", value: data.occupation },
+    { key: "fullName", label: rowLabel(data.language, "fullName", "Full Name"), value: data.fullName },
+    { key: "dob", label: rowLabel(data.language, "dob", "Date of Birth"), value: data.dob },
+    { key: "height", label: rowLabel(data.language, "height", "Height"), value: data.height },
+    { key: "nativePlace", label: rowLabel(data.language, "nativePlace", "Place of Birth"), value: data.nativePlace },
+    { key: "religion", label: rowLabel(data.language, "religion", "Religion"), value: data.religion },
+    { key: "caste", label: rowLabel(data.language, "caste", "Caste"), value: data.caste },
+    { key: "rashi", label: rowLabel(data.language, "rashi", "Zodiac Sign"), value: data.rashi },
+    { key: "nakshatra", label: rowLabel(data.language, "nakshatra", "Nakshatra"), value: data.nakshatra },
+    { key: "manglik", label: rowLabel(data.language, "manglik", "Manglik"), value: data.manglik },
+    { key: "gotra", label: rowLabel(data.language, "gotra", "Gotra"), value: data.gotra },
+    { key: "education", label: rowLabel(data.language, "education", "Higher Education"), value: data.education },
+    { key: "occupation", label: rowLabel(data.language, "occupation", "Occupation"), value: data.occupation },
   ]);
   const family: Row[] = orderedRows(data, "family", [
-    { key: "fatherName", label: "Father's Name", value: data.fatherName },
-    { key: "fatherOccupation", label: "Father's Occupation", value: data.fatherOccupation },
-    { key: "motherName", label: "Mother's Name", value: data.motherName },
-    { key: "motherOccupation", label: "Mother's Occupation", value: data.motherOccupation },
-    { key: "siblings", label: "Brothers / Sisters", value: data.siblings },
-    { key: "familyDetails", label: "Family Background", value: data.familyDetails },
+    { key: "fatherName", label: rowLabel(data.language, "fatherName", "Father's Name"), value: data.fatherName },
+    { key: "fatherOccupation", label: rowLabel(data.language, "fatherOccupation", "Father's Occupation"), value: data.fatherOccupation },
+    { key: "motherName", label: rowLabel(data.language, "motherName", "Mother's Name"), value: data.motherName },
+    { key: "motherOccupation", label: rowLabel(data.language, "motherOccupation", "Mother's Occupation"), value: data.motherOccupation },
+    { key: "siblings", label: rowLabel(data.language, "siblings", "Brothers / Sisters"), value: data.siblings },
+    { key: "familyDetails", label: rowLabel(data.language, "familyDetails", "Family Background"), value: data.familyDetails },
   ]);
   const contact: Row[] = orderedRows(data, "contact", [
-    { key: "phone", label: "Mobile Number", value: data.phone },
-    { key: "email", label: "Email", value: data.email },
-    { key: "address", label: "Address", value: data.address },
+    { key: "phone", label: rowLabel(data.language, "phone", "Mobile Number"), value: data.phone },
+    { key: "email", label: rowLabel(data.language, "email", "Email"), value: data.email },
+    { key: "address", label: rowLabel(data.language, "address", "Address"), value: data.address },
   ]);
   const has = (rows: Row[]) => rows.filter(([, v]) => v && String(v).trim());
 
@@ -306,9 +307,9 @@ const TemplateArtPreview = forwardRef<HTMLDivElement, Props>(function TemplateAr
             let first = true;
             const out: ReactNode[] = [];
             for (const [h, rows] of [
-              ["Personal Details", personal],
-              ["Family Details", family],
-              ["Contact Details", contact],
+              [sectionTitle(data.language, "personalDetails", "Personal Details"), personal],
+              [sectionTitle(data.language, "familyDetails", "Family Details"), family],
+              [sectionTitle(data.language, "contactDetails", "Contact Details"), contact],
             ] as [string, Row[]][]) {
               const node = section(h, rows, first);
               if (node) {
