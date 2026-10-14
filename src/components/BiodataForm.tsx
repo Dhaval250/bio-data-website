@@ -8,6 +8,7 @@ import BiodataPreview from "./BiodataPreview";
 import PreviewProtection from "./PreviewProtection";
 import ExtraPhotosPreview from "./ExtraPhotosPreview";
 import { translateKnown } from "@/lib/valueDictionary";
+import { transliterate, hasLatinWords } from "@/lib/transliterate";
 import { cn } from "@/lib/utils";
 import { savePhotos, loadPhotos, clearPhotos } from "@/lib/photoStore";
 
@@ -235,15 +236,27 @@ function FieldRow({
 }) {
   const [editingLabel, setEditingLabel] = useState(false);
 
-  /** Only converts well-known answers (Hindu, Farmer, Kanya ...). Everything else stays as typed. */
-  const tryAutoTranslate = () => {
+  const valueRef = useRef(field.value);
+  useEffect(() => {
+    valueRef.current = field.value;
+  }, [field.value]);
+
+  /** Known answers via dictionary, everything else (names, places) by sound. */
+  const tryAutoTranslate = async () => {
     if (!onTranslateValue) return;
+    if (language === "en") return;
     if (SKIP_TRANSLATE_KEYS.has(field.key)) return;
     if (field.type === "date" || field.type === "select") return;
     const v = field.value?.trim();
     if (!v) return;
-    const converted = translateKnown(v, language);
-    if (converted && converted !== v) onTranslateValue(field.id, converted);
+    const known = translateKnown(v, language);
+    if (known) {
+      if (known !== v) onTranslateValue(field.id, known);
+      return;
+    }
+    if (!hasLatinWords(v)) return;
+    const converted = await transliterate(v, language);
+    if (converted && valueRef.current?.trim() === v) onTranslateValue(field.id, converted);
   };
 
   const btnIcon =
@@ -328,7 +341,7 @@ function FieldRow({
               className={cn(fieldClass, "min-h-[80px] resize-y")}
               value={field.value}
               onChange={(e) => onChange(field.id, { value: e.target.value })}
-              onBlur={tryAutoTranslate}
+              onBlur={() => void tryAutoTranslate()}
               placeholder={field.placeholder}
               rows={3}
             />
@@ -344,7 +357,7 @@ function FieldRow({
               value={field.value}
               data-field-key={field.key}
               onChange={(e) => onChange(field.id, { value: e.target.value })}
-              onBlur={tryAutoTranslate}
+              onBlur={() => void tryAutoTranslate()}
               placeholder={field.placeholder}
               autoComplete={field.key === "fullName" ? "name" : "off"}
             />
@@ -564,9 +577,30 @@ export default function BiodataForm() {
       const fromLang = (data.language as Language) || "en";
       if (fromLang === next) return;
 
+      // Values that the dictionary cannot convert are converted by sound (names, places ...)
+      const pending: { id: string; value: string }[] = [];
+      if (next !== "en") {
+        for (const f of [...personalFields, ...familyFields, ...contactFields]) {
+          const v = (f.value || "").trim();
+          if (!v || SKIP_TRANSLATE_KEYS.has(f.key) || f.type === "date" || f.type === "select") continue;
+          if (!translateKnown(v, next) && hasLatinWords(v)) pending.push({ id: f.id, value: v });
+        }
+      }
+
       setPersonalFields((prev) => convertFields(prev, next));
       setFamilyFields((prev) => convertFields(prev, next));
       setContactFields((prev) => convertFields(prev, next));
+
+      for (const { id, value } of pending) {
+        void transliterate(value, next).then((out) => {
+          if (!out) return;
+          const apply = (list: FormFieldRow[]) =>
+            list.map((f) => (f.id === id && (f.value || "").trim() === value ? { ...f, value: out } : f));
+          setPersonalFields(apply);
+          setFamilyFields(apply);
+          setContactFields(apply);
+        });
+      }
 
       // Title + Mantra: swap only the untouched defaults
       setData((prev) => {
@@ -586,7 +620,7 @@ export default function BiodataForm() {
         };
       });
     },
-    [convertFields, data.language]
+    [convertFields, data.language, personalFields, familyFields, contactFields]
   );
 
   // Keep labels in sync on first mount for default language
@@ -939,8 +973,8 @@ export default function BiodataForm() {
                 </div>
                 {data.language !== "en" && (
                   <p className="-mt-3 text-xs text-stone-600">
-                    Tip: type names and places with your own language keyboard. Only common answers
-                    (Hindu, Farmer, Kanya, B+ ...) are converted automatically.
+                    Tip: names and places you type in English are converted to this language by sound
+                    when you leave the field. Please check the spelling.
                   </p>
                 )}
 

@@ -200,3 +200,20 @@ input, select, textarea {
 img.h-full.w-full.object-contain.object-center.transition.duration-300.group-hover\:scale-\[1\.02\] {
   max-height: 100%;
 }
+
+
+.site-logo {
+  display: block;
+  flex-shrink: 0;
+  width: auto;
+  max-width: none;
+  height: 40px;
+}
+@media (min-width: 640px) {
+  .site-logo { height: 100px; }
+}
+
+header nav a,
+header > div > a {
+  white-space: nowrap;
+}

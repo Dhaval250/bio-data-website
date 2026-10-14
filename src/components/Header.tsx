@@ -17,23 +17,16 @@ export default function Header() {
           aria-label="Marriage Biodata – FreeBiodataMaker home"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo-mark.webp"
-            alt=""
-            width={169}
-            height={112}
-            fetchPriority="high"
-            decoding="async"
-            className="h-10 w-auto sm:h-12"
-          />
-          <span className="flex flex-col leading-none">
-            <span className="font-serif text-[19px] font-bold tracking-tight sm:text-[22px]">
-              Marriage
-            </span>
-            <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-[#7a5c14] sm:text-[11px]">
-              Biodata
-            </span>
-          </span>
+         <img
+  src="/logo-marks.webp"
+  alt=""
+  width={169}
+  height={112}
+  fetchPriority="high"
+  decoding="async"
+  className="site-logo"
+/>
+         
         </Link>
 
         <nav className="hidden items-center gap-1 text-sm md:flex" aria-label="Main">
