@@ -207,10 +207,14 @@ img.h-full.w-full.object-contain.object-center.transition.duration-300.group-hov
   flex-shrink: 0;
   width: auto;
   max-width: none;
-  height: 40px;
+  height: 80px;
 }
-@media (min-width: 640px) {
-  .site-logo { height: 100px; }
+
+
+@media (max-width: 639px) {
+  .site-logo {
+    height: 120px;
+  }
 }
 
 header nav a,
