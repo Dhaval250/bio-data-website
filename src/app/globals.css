@@ -200,3 +200,24 @@ input, select, textarea {
 img.h-full.w-full.object-contain.object-center.transition.duration-300.group-hover\:scale-\[1\.02\] {
   max-height: 100%;
 }
+
+
+
+/* Mobile (default, badhi screen par) */
+.site-logo {
+  display: block;
+  flex-shrink: 0;
+  width: auto;
+  max-width: none;
+  height: 80px;
+}
+
+/* Tablet ane desktop (640px ke vadhare) */
+.site-logo {
+  display: block;
+  flex-shrink: 0;
+  width: auto;
+  max-width: none;
+  height: 80px;
+}
+
