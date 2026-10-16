@@ -1,6 +1,8 @@
 "use client";
 
-import { TEMPLATES, templateImageSrc } from "@/lib/templates";
+import { useState } from "react";
+import { templateImageSrc } from "@/lib/templates";
+import TemplateCategoryTabs, { templatesForTab, tabButtonId, type TemplateTab } from "./TemplateCategoryTabs";
 import { cn } from "@/lib/utils";
 
 export default function TemplateSelector({
@@ -10,6 +12,8 @@ export default function TemplateSelector({
   selectedId: string;
   onSelect: (id: string) => void;
 }) {
+  const [tab, setTab] = useState<TemplateTab>("all");
+
   return (
     <div className="space-y-5 rounded-2xl border-2 border-[#e8d5a3] bg-gradient-to-b from-[#fffbf0] to-white p-4 shadow-sm sm:p-6">
       <div className="text-center sm:text-left">
@@ -24,8 +28,15 @@ export default function TemplateSelector({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {TEMPLATES.map((tpl) => {
+      <TemplateCategoryTabs value={tab} onChange={setTab} idPrefix="sel" panelId="sel-panel" />
+
+      <div
+        id="sel-panel"
+        role="tabpanel"
+        aria-labelledby={tabButtonId("sel", tab)}
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {templatesForTab(tab).map((tpl) => {
           const active = selectedId === tpl.id;
           return (
             <button

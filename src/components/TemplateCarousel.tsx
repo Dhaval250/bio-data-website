@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { TEMPLATES, templateImageSrc } from "@/lib/templates";
+import { useEffect, useRef, useState } from "react";
+import { templateImageSrc } from "@/lib/templates";
+import TemplateCategoryTabs, { templatesForTab, tabButtonId, type TemplateTab } from "./TemplateCategoryTabs";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,6 +18,13 @@ export default function TemplateCarousel({
   onSelect: (id: string) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const [tab, setTab] = useState<TemplateTab>("all");
+  const items = templatesForTab(tab);
+
+  const changeTab = (next: TemplateTab) => {
+    setTab(next);
+    trackRef.current?.scrollTo({ left: 0 });
+  };
 
   // Keep the active template visible
   useEffect(() => {
@@ -34,20 +42,24 @@ export default function TemplateCarousel({
 
   return (
     <div className="relative mx-auto w-full max-w-3xl rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+      <TemplateCategoryTabs value={tab} onChange={changeTab} idPrefix="car" panelId="car-panel" compact />
       <button
         type="button"
         aria-label="Previous templates"
         onClick={() => scrollBy(-1)}
-        className="absolute left-1 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#b45309] text-xl font-bold text-white shadow-md transition hover:bg-[#92400e] sm:flex"
+        className="absolute left-1 top-[58%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#b45309] text-xl font-bold text-white shadow-md transition hover:bg-[#92400e] sm:flex"
       >
         ‹
       </button>
 
       <div
         ref={trackRef}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-8"
+        id="car-panel"
+        role="tabpanel"
+        aria-labelledby={tabButtonId("car", tab)}
+        className="mt-2 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-8"
       >
-        {TEMPLATES.map((tpl) => {
+        {items.map((tpl) => {
           const active = tpl.id === selectedId;
           return (
             <button
@@ -95,7 +107,7 @@ export default function TemplateCarousel({
         type="button"
         aria-label="Next templates"
         onClick={() => scrollBy(1)}
-        className="absolute right-1 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#b45309] text-xl font-bold text-white shadow-md transition hover:bg-[#92400e] sm:flex"
+        className="absolute right-1 top-[58%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[#b45309] text-xl font-bold text-white shadow-md transition hover:bg-[#92400e] sm:flex"
       >
         ›
       </button>
