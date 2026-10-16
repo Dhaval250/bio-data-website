@@ -10,23 +10,30 @@ const NAV = [
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-stone-200/80 bg-[#faf8f5]/95 backdrop-blur-md">
-      <div className="mx-auto flex h-24 w-full max-w-[1400px] items-center justify-between gap-2 px-3 sm:h-[72px] sm:px-6 lg:px-10">
+      <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between gap-2 px-3 sm:h-[72px] sm:px-6 lg:px-10">
         <Link
           href="/"
           className="flex items-center gap-2.5 text-[#1c1917]"
           aria-label="Marriage Biodata – FreeBiodataMaker home"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-         <img
-  src="/logo-marks.webp"
-  alt=""
-  width={169}
-  height={112}
-  fetchPriority="high"
-  decoding="async"
-  className="site-logo"
-/>
-         
+          <img
+            src="/logo-mark.webp"
+            alt=""
+            width={169}
+            height={112}
+            fetchPriority="high"
+            decoding="async"
+            className="h-10 w-auto sm:h-12"
+          />
+          <span className="flex flex-col leading-none">
+            <span className="font-serif text-[19px] font-bold tracking-tight sm:text-[22px]">
+              Marriage
+            </span>
+            <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.32em] text-[#7a5c14] sm:text-[11px]">
+              Biodata
+            </span>
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 text-sm md:flex" aria-label="Main">

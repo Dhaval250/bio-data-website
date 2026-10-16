@@ -1,11 +1,39 @@
 "use client";
 
-import { TEMPLATES, templateImageSrc } from "@/lib/templates";
+import { useRef, useState } from "react";
+import { TEMPLATES, TEMPLATE_CATEGORIES, templateImageSrc } from "@/lib/templates";
+import type { TemplateCategory } from "@/lib/types";
 
 export const PREFERRED_TEMPLATE_KEY = "fbm-preferred-template";
 export const TEMPLATE_SELECT_EVENT = "fbm-template-select";
 
+type Tab = "all" | TemplateCategory;
+
+const TABS: { id: Tab; label: string; count: number }[] = [
+  { id: "all", label: "All", count: TEMPLATES.length },
+  ...TEMPLATE_CATEGORIES.map((c) => ({
+    ...c,
+    count: TEMPLATES.filter((t) => t.category === c.id).length,
+  })),
+];
+
 export default function TemplateGallery() {
+  const [tab, setTab] = useState<Tab>("all");
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const visible = tab === "all" ? TEMPLATES : TEMPLATES.filter((t) => t.category === tab);
+
+  const onTabKey = (e: React.KeyboardEvent, index: number) => {
+    let next = -1;
+    if (e.key === "ArrowRight") next = (index + 1) % TABS.length;
+    else if (e.key === "ArrowLeft") next = (index - 1 + TABS.length) % TABS.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = TABS.length - 1;
+    if (next < 0) return;
+    e.preventDefault();
+    setTab(TABS[next].id);
+    tabRefs.current[next]?.focus();
+  };
+
   const pick = (id: string) => {
     try {
       sessionStorage.setItem(PREFERRED_TEMPLATE_KEY, id);
@@ -23,8 +51,56 @@ export default function TemplateGallery() {
   };
 
   return (
-    <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-      {TEMPLATES.map((t) => (
+    <div className="mt-8">
+      <div
+        role="tablist"
+        aria-label="Template categories"
+        className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-2 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0"
+      >
+        {TABS.map((c, i) => {
+          const active = tab === c.id;
+          return (
+            <button
+              key={c.id}
+              ref={(el) => {
+                tabRefs.current[i] = el;
+              }}
+              type="button"
+              role="tab"
+              id={`tpl-tab-${c.id}`}
+              aria-selected={active}
+              aria-controls="tpl-panel"
+              tabIndex={active ? 0 : -1}
+              onClick={() => setTab(c.id)}
+              onKeyDown={(e) => onTabKey(e, i)}
+              className={
+                "inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition " +
+                (active
+                  ? "border-[#1c1917] bg-[#1c1917] text-[#e8d5a3] shadow"
+                  : "border-stone-300 bg-white text-stone-700 hover:border-[#7a5c14] hover:text-[#7a5c14]")
+              }
+            >
+              {c.label}
+              <span
+                className={
+                  "rounded-full px-2 py-0.5 text-[11px] font-bold " +
+                  (active ? "bg-white/15 text-[#e8d5a3]" : "bg-stone-100 text-stone-600")
+                }
+              >
+                {c.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        id="tpl-panel"
+        role="tabpanel"
+        aria-labelledby={`tpl-tab-${tab}`}
+        className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3"
+      >
+      {visible.map((t) => (
         <a
           key={t.id}
           href="#create"
@@ -65,6 +141,7 @@ export default function TemplateGallery() {
           </div>
         </a>
       ))}
+      </div>
     </div>
   );
 }

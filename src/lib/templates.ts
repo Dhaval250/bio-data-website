@@ -1,9 +1,18 @@
-import { Template } from "./types";
+import { Template, TemplateCategory } from "./types";
+
+/** Gallery tabs, in display order. To move a design, change its `category` below. */
+export const TEMPLATE_CATEGORIES: { id: TemplateCategory; label: string }[] = [
+  { id: "floral", label: "Floral" },
+  { id: "traditional", label: "Traditional" },
+  { id: "royal", label: "Royal & Dark" },
+  { id: "classic", label: "Classic & Minimal" },
+];
 
 /** Only templates that have real preview images in /public/templates */
 export const TEMPLATES: Template[] = [
   {
     id: "abstract-orange",
+    category: "floral",
     name: "Abstract Orange",
     description: "Floral cream frame, orange headers, photo right",
     accent: "#e67e22",
@@ -13,6 +22,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "abstract-lotus",
+    category: "floral",
     name: "Abstract Lotus",
     description: "Soft pink lotus corners, burgundy titles, cream page",
     accent: "#9b2c2c",
@@ -22,6 +32,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "abstract-red-velvet",
+    category: "traditional",
     name: "Abstract Red Velvet",
     description: "Deep red velvet frame, white center, traditional look",
     accent: "#9b1c1c",
@@ -31,6 +42,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "abstract-rose",
+    category: "royal",
     name: "Abstract Rose",
     description: "Rich magenta rose with gold ornaments",
     accent: "#f5d76e",
@@ -40,6 +52,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "abstract-blue",
+    category: "royal",
     name: "Abstract Blue",
     description: "Navy blue premium with gold accents",
     accent: "#f5d76e",
@@ -49,6 +62,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "classic-cream",
+    category: "classic",
     name: "Classic Cream",
     description: "Cream damask page, Ganesha calligraphy, brown text",
     accent: "#834b11",
@@ -58,6 +72,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "maroon-gold",
+    category: "royal",
     name: "Maroon Gold",
     description: "Textured maroon with gold border and Ganesha watermark",
     accent: "#f6c291",
@@ -67,6 +82,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "royal-purple",
+    category: "royal",
     name: "Royal Purple",
     description: "Deep purple gradient with gold ornaments",
     accent: "#f3c196",
@@ -76,6 +92,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "royal-elephant",
+    category: "royal",
     name: "Royal Elephant",
     description: "Red arch with elephants, marigold garlands, round photo",
     accent: "#a01418",
@@ -85,6 +102,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "royal-leaf",
+    category: "royal",
     name: "Royal Leaf Maroon",
     description: "Deep maroon with gold leaf borders and Ganesha calligraphy",
     accent: "#f7b538",
@@ -94,6 +112,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "festive-border",
+    category: "traditional",
     name: "Festive Border",
     description: "White page, ornate orange and magenta border, serif text",
     accent: "#a21f6d",
@@ -103,6 +122,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "abstract-ganesha",
+    category: "traditional",
     name: "Abstract Ganesha",
     description: "White page, maroon border, Ganesha watermark, photo right",
     accent: "#7b2313",
@@ -112,6 +132,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "royal-gold-maroon",
+    category: "royal",
     name: "Royal Gold Maroon",
     description: "Burgundy with golden scroll corners and mandala sides",
     accent: "#f3be5f",
@@ -121,6 +142,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "rose-floral",
+    category: "floral",
     name: "Rose Floral",
     description: "Soft peach page, gold frame, pink flowers, romantic backdrop",
     accent: "#a4823a",
@@ -130,6 +152,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "elegant-profile",
+    category: "classic",
     name: "Elegant Profile",
     description: "Soft cream two-column personal profile with photo",
     accent: "#3f3a34",

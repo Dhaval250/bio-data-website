@@ -72,8 +72,11 @@ export interface BiodataFormData {
   fieldOrder?: Partial<Record<"personal" | "family" | "contact", string[]>>;
 }
 
+export type TemplateCategory = "floral" | "traditional" | "royal" | "classic";
+
 export interface Template {
   id: string;
+  category: TemplateCategory;
   name: string;
   description: string;
   accent: string;
